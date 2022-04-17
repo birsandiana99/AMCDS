@@ -1,0 +1,6 @@
+14:55:31.787 INF 127.0.0.1-1: listening on 127.0.0.1:5001
+14:55:31.788 INF 127.0.0.1-2: listening on 127.0.0.1:5002
+14:55:31.788 INF 127.0.0.1-3: listening on 127.0.0.1:5003
+14:55:33.844 FTL Failed to register process 127.0.0.1-1
+14:55:33.844 FTL Failed to register process 127.0.0.1-2
+14:55:33.845 FTL Failed to register process 127.0.0.1-3
