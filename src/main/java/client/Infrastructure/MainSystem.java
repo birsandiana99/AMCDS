@@ -80,5 +80,14 @@ public class MainSystem {
                 .build());
 
         proc3.socketHub.close();
+
+
+        Listener eventsListener1 = new Listener("Listener1", 5004, proc1);
+        Listener eventsListener2 = new Listener("Listener2", 5005, proc2);
+        Listener eventsListener3 = new Listener("Listener3", 5006, proc3);
+
+        eventsListener1.start();
+        eventsListener2.start();
+        eventsListener3.start();
     }
 }
