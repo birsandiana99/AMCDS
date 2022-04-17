@@ -1,10 +1,11 @@
-16:46:13.746 INF hub: Listening on 127.0.0.1:5000
-16:46:13.747 INF ref-3: listening on 127.0.0.1:5003
-16:46:13.747 INF ref-1: listening on 127.0.0.1:5001
-16:46:13.750 INF ref-2: listening on 127.0.0.1:5002
-16:46:13.766 INF hub: Received registration from ref-2
-16:46:13.766 INF hub: Received registration from ref-1
-16:46:13.766 INF hub: Received registration from ref-3
-16:47:15.941 ERR hub: Failed reading message
-16:47:15.951 ERR hub: Failed reading message
-16:47:15.952 ERR hub: Failed reading message
+17:10:12.507 INF hub: Listening on 127.0.0.1:5000
+17:10:12.509 INF ref-1: listening on 127.0.0.1:5001
+17:10:12.509 INF ref-3: listening on 127.0.0.1:5003
+17:10:12.509 INF ref-2: listening on 127.0.0.1:5002
+17:10:12.521 INF hub: Received registration from ref-3
+17:10:12.521 INF hub: Received registration from ref-2
+17:10:12.521 INF hub: Received registration from ref-1
+17:10:23.921 INF ref-1: Stopping ...
+17:10:24.603 INF ref-2: Stopping ...
+17:10:25.605 INF ref-3: Stopping ...
+17:10:26.614 INF hub: Stopping ...
