@@ -1,90 +1,10 @@
-15:07:12.338 INF hub: Listening on 127.0.0.1:5000
-15:07:12.340 INF ref-1: listening on 127.0.0.1:5001
-15:07:12.340 INF ref-3: listening on 127.0.0.1:5003
-15:07:12.341 INF ref-2: listening on 127.0.0.1:5002
-15:07:12.355 INF hub: Received registration from ref-1
-15:07:12.355 INF hub: Received registration from ref-3
-15:07:12.355 INF hub: Received registration from ref-2
-15:07:53.504 INF hub: Received registration from abc-1
-15:07:53.504 INF hub: Received registration from abc-2
-15:07:53.504 INF hub: Received registration from abc-3
-15:08:36.866 INF                                         ref-3: Starting system sys-1 ...
-15:08:36.866 INF                     ref-2: Starting system sys-1 ...
-15:08:36.865 INF ref-1: Starting system sys-1 ...
-15:09:07.672 INF hub: sys-1/abc-1 delivered 52
-15:09:07.712 INF hub: sys-1/abc-2 delivered 52
-15:09:07.721 INF hub: sys-1/abc-3 delivered 52
-15:09:07.863 INF hub: sys-1/ref-2 delivered 52
-15:09:07.863 INF hub: sys-1/ref-1 delivered 52
-15:09:07.863 INF hub: sys-1/ref-3 delivered 52
-15:09:23.441 INF hub: sys-1/abc-2 finished writing x
-15:09:32.843 INF hub: sys-1/ref-3 read x=89
-15:09:32.955 INF hub: sys-1/abc-1 read x=89
-15:09:33.096 INF hub: sys-1/abc-3 read x=89
-15:09:33.132 INF hub: sys-1/ref-2 read x=89
-15:09:33.136 INF hub: sys-1/abc-2 read x=89
-15:09:33.174 INF hub: sys-1/ref-1 read x=89
-15:10:02.844 INF hub: sys-1/ref-3 finished writing w
-15:10:02.882 INF hub: sys-1/ref-2 finished writing w
-15:10:02.962 INF hub: sys-1/abc-3 finished writing w
-15:10:03.143 INF hub: sys-1/abc-2 finished writing w
-15:10:03.259 INF hub: sys-1/ref-1 finished writing w
-15:10:03.585 INF hub: sys-1/abc-1 finished writing w
-15:10:04.296 INF hub: sys-1/ref-3 finished writing w
-15:10:04.298 INF hub: sys-1/ref-2 read w=74
-15:10:04.943 INF hub: sys-1/abc-3 read w=74
-15:10:05.257 INF hub: sys-1/ref-1 finished writing w
-15:10:05.460 INF hub: sys-1/abc-2 finished writing w
-15:10:05.885 INF hub: sys-1/abc-1 read w=60
-15:10:06.607 INF hub: sys-1/ref-3 read w=42
-15:10:06.939 INF hub: sys-1/ref-2 finished writing w
-15:10:07.402 INF hub: sys-1/abc-3 finished writing w
-15:10:07.835 INF hub: sys-1/ref-1 read w=34
-15:10:07.994 INF hub: sys-1/abc-2 read w=34
-15:10:08.990 INF hub: sys-1/abc-1 finished writing w
-15:10:09.305 INF hub: sys-1/ref-3 read w=34
-15:10:09.456 INF hub: sys-1/ref-2 read w=75
-15:10:09.818 INF hub: sys-1/abc-3 read w=75
-15:10:10.213 INF hub: sys-1/abc-2 read w=75
-15:10:10.530 INF hub: sys-1/ref-1 read w=75
-15:10:10.593 INF hub: sys-1/abc-1 read w=75
-15:11:18.155 INF hub: sys-1/ref-1 decided 87
-15:11:18.227 INF hub: sys-1/ref-2 decided 87
-15:11:18.258 INF hub: sys-1/abc-2 decided 87
-15:11:18.279 INF hub: sys-1/abc-3 decided 87
-15:11:18.303 INF hub: sys-1/abc-1 decided 87
-15:11:18.343 INF hub: sys-1/ref-3 decided 87
-15:11:18.344 INF sys-1/ref-1/EPFD: Increased timeout to 0.20 seconds
-15:11:18.344 INF sys-1/ref-3/EPFD: Increased timeout to 0.20 seconds
-15:11:18.346 INF sys-1/ref-2/EPFD: Increased timeout to 0.20 seconds
-15:11:18.566 INF sys-1/ref-2/EPFD: Increased timeout to 0.30 seconds
-15:11:18.763 INF sys-1/ref-1/EPFD: Increased timeout to 0.30 seconds
-15:11:18.767 INF sys-1/ref-3/EPFD: Increased timeout to 0.30 seconds
-15:11:18.891 INF sys-1/ref-2/EPFD: Increased timeout to 0.40 seconds
-15:11:19.070 INF sys-1/ref-3/EPFD: Increased timeout to 0.40 seconds
-15:11:19.073 INF sys-1/ref-1/EPFD: Increased timeout to 0.40 seconds
-15:11:19.297 INF sys-1/ref-2/EPFD: Increased timeout to 0.50 seconds
-15:11:19.474 INF sys-1/ref-3/EPFD: Increased timeout to 0.50 seconds
-15:11:19.509 INF sys-1/ref-1/EPFD: Increased timeout to 0.50 seconds
-15:11:19.821 INF sys-1/ref-2/EPFD: Increased timeout to 0.60 seconds
-15:11:20.022 INF sys-1/ref-1/EPFD: Increased timeout to 0.60 seconds
-15:11:20.026 INF sys-1/ref-3/EPFD: Increased timeout to 0.60 seconds
-15:11:20.432 INF sys-1/ref-2/EPFD: Increased timeout to 0.70 seconds
-15:11:20.632 INF sys-1/ref-1/EPFD: Increased timeout to 0.70 seconds
-15:11:20.634 INF sys-1/ref-3/EPFD: Increased timeout to 0.70 seconds
-15:11:21.153 INF sys-1/ref-2/EPFD: Increased timeout to 0.80 seconds
-15:11:21.363 INF sys-1/ref-3/EPFD: Increased timeout to 0.80 seconds
-15:11:21.368 INF sys-1/ref-1/EPFD: Increased timeout to 0.80 seconds
-15:11:21.974 INF sys-1/ref-2/EPFD: Increased timeout to 0.90 seconds
-15:11:22.181 INF sys-1/ref-3/EPFD: Increased timeout to 0.90 seconds
-15:11:22.190 INF sys-1/ref-1/EPFD: Increased timeout to 0.90 seconds
-15:11:22.925 INF sys-1/ref-2/EPFD: Increased timeout to 1.00 seconds
-15:11:23.097 INF sys-1/ref-3/EPFD: Increased timeout to 1.00 seconds
-15:11:23.102 INF sys-1/ref-1/EPFD: Increased timeout to 1.00 seconds
-15:11:23.965 INF sys-1/ref-2/EPFD: Increased timeout to 1.10 seconds
-15:11:24.102 INF sys-1/ref-3/EPFD: Increased timeout to 1.10 seconds
-15:11:24.108 INF sys-1/ref-1/EPFD: Increased timeout to 1.10 seconds
-15:11:51.859 INF ref-1: Stopping ...
-15:11:52.863 INF ref-2: Stopping ...
-15:11:53.869 INF ref-3: Stopping ...
-15:11:54.869 INF hub: Stopping ...
+16:40:15.662 INF hub: Listening on 127.0.0.1:5000
+16:40:15.664 INF ref-1: listening on 127.0.0.1:5001
+16:40:15.666 INF ref-2: listening on 127.0.0.1:5002
+16:40:15.667 INF ref-3: listening on 127.0.0.1:5003
+16:40:15.679 INF hub: Received registration from ref-2
+16:40:15.679 INF hub: Received registration from ref-1
+16:40:15.679 INF hub: Received registration from ref-3
+16:40:41.250 ERR hub: Failed reading message
+16:40:41.254 ERR hub: Failed reading message
+16:40:41.254 ERR hub: Failed reading message

@@ -1,0 +1,1 @@
+protoc communication-protocol.proto --java_out=ABSOLUTE_PATH_PROTOBUF_FOLDER
