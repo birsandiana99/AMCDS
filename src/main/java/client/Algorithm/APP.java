@@ -15,18 +15,11 @@ public class APP  implements AbstractionInterface{
     @Override
     public boolean handle(Message message) {
         switch (message.getType()) {
-            case APP_BROADCAST:
-                //TODO:
-                //PL_DELIVER
             case PL_DELIVER:
                 if (message.getPlDeliver().getMessage().getType().equals(Message.Type.APP_BROADCAST)) {
                     bebBroadcast(message.getPlDeliver().getMessage());
                     return true;
                 }
-            case PL_SEND:
-                //TODO:
-             return true;
-
             case BEB_DELIVER:
                 plSend(message.getBebDeliver().getMessage());
                 return true;

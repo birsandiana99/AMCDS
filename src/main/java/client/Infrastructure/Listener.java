@@ -1,6 +1,7 @@
 package client.Infrastructure;
 
 import client.Algorithm.APP;
+import client.Algorithm.BEB;
 import client.Algorithm.PL;
 import client.Utilities.EventsListener;
 import client.Utilities.MessageUtils;
@@ -38,11 +39,11 @@ public class Listener extends Thread {
                 socket = processSocket.accept();
                 Message message = MessageUtils.read(socket.getInputStream());
 
-                if(message.getNetworkMessage().getMessage().getType().equals(Message.Type.PROC_INITIALIZE_SYSTEM)) {
-                    System.out.println("Got proc init system");
+                if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.PROC_INITIALIZE_SYSTEM)) {
+                    System.out.println("Got proc init system " + process.owner + "-" + process.index);
 
                     process.processes = message.getNetworkMessage().getMessage().getProcInitializeSystem().getProcessesList();
-                    process.rank =process.processes.get(process.index).getRank();
+                    process.rank = process.processes.get(process.index).getRank();
 
                     List<ProcessId> processesList = message.getNetworkMessage().getMessage().getProcInitializeSystem().getProcessesList();
                     process.setProcesses(processesList);
@@ -52,10 +53,25 @@ public class Listener extends Thread {
 
                     process.abstractionInterfaceMap.put("app.pl", new PL());
                     process.abstractionInterfaceMap.get("app.pl").init(process);
+
+                    process.abstractionInterfaceMap.put("app.beb", new BEB());
+                    process.abstractionInterfaceMap.get("app.beb").init(process);
+
+                    process.abstractionInterfaceMap.put("app.beb.pl", new PL());
+                    process.abstractionInterfaceMap.get("app.beb.pl").init(process);
                 }
-                else  if(message.getNetworkMessage().getMessage().getType().equals(Message.Type.PROC_DESTROY_SYSTEM)){
+                else if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.PROC_DESTROY_SYSTEM)) {
                     System.out.println("DESTROY PROC " + process.owner + "-" + process.index);
                     process.abstractionInterfaceMap.clear();
+
+                }
+                else if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.APP_BROADCAST)){
+                    System.out.println("Got Network App Broadcast " + process.owner + "-" + process.index);
+                    process.messages.add(message);
+                }
+
+                else if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.APP_VALUE)) {
+                    process.messages.add(message);
                 }
 
             }
