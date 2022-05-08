@@ -20,6 +20,38 @@ public class APP  implements AbstractionInterface{
                     bebBroadcast(message.getPlDeliver().getMessage());
                     return true;
                 }
+                if (message.getPlDeliver().getMessage().getType().equals(Message.Type.APP_WRITE)) {
+                    String register = message.getPlDeliver().getMessage().getAppWrite().getRegister();
+
+                    registerAbstraction(register);
+
+                    Message msg = Message.newBuilder()
+                            .setType(Message.Type.NNAR_WRITE)
+                            .setFromAbstractionId("app")
+                            .setToAbstractionId("app.nnar[" + register + "]")
+                            .setSystemId("sys-1")
+                            .setNnarWrite(NnarWrite.newBuilder()
+                                    .setValue(message.getPlDeliver().getMessage().getAppWrite().getValue())
+                                    .build())
+                            .build();
+                    process.messages.add(msg);
+                    return true;
+                }
+                if (message.getPlDeliver().getMessage().getType().equals(Message.Type.APP_READ)) {
+                    String register = message.getPlDeliver().getMessage().getAppRead().getRegister();
+
+                    registerAbstraction(register);
+
+                    Message msg = Message.newBuilder()
+                            .setType(Message.Type.NNAR_READ)
+                            .setFromAbstractionId("app")
+                            .setToAbstractionId("app.nnar[" + register + "]")
+                            .setSystemId("sys-1")
+                            .build();
+                    process.messages.add(msg);
+                    return true;
+                }
+
             case BEB_DELIVER:
                 plSend(message.getBebDeliver().getMessage());
                 return true;
@@ -67,4 +99,23 @@ public class APP  implements AbstractionInterface{
                 .build());
     }
 
+    private void registerAbstraction(String register) {
+        if (process.abstractionInterfaceMap.get("app.nnar[" + register + "]") == null) {
+            process.abstractionInterfaceMap.put("app.nnar[" + register + "]", new NNAR());
+            process.abstractionInterfaceMap.get("app.nnar[" + register + "]").init(process);
+
+            process.abstractionInterfaceMap.put("app.nnar[" + register + "].pl", new PL());
+            process.abstractionInterfaceMap.get("app.nnar[" + register + "].pl").init(process);
+
+            process.abstractionInterfaceMap.put("app.nnar[" + register + "].beb", new BEB());
+            process.abstractionInterfaceMap.get("app.nnar[" + register + "].beb").init(process);
+
+            process.abstractionInterfaceMap.put("app.nnar[" + register + "].beb.pl", new PL());
+            process.abstractionInterfaceMap.get("app.nnar[" + register + "].beb.pl").init(process);
+
+            process.register = register;
+
+            System.out.println("Registered NNAR on " + process.debugName);
+        }
+    }
 }

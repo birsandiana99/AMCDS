@@ -2,6 +2,7 @@ package client.Infrastructure;
 
 import client.Algorithm.APP;
 import client.Algorithm.BEB;
+import client.Algorithm.NNAR;
 import client.Algorithm.PL;
 import client.Utilities.EventsListener;
 import client.Utilities.MessageUtils;
@@ -69,10 +70,37 @@ public class Listener extends Thread {
                     System.out.println("Got Network App Broadcast " + process.owner + "-" + process.index);
                     process.messages.add(message);
                 }
-
                 else if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.APP_VALUE)) {
                     process.messages.add(message);
                 }
+                else if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.APP_WRITE)){
+                    process.messages.add(message);
+                    System.out.println("Got App Write");
+                }
+                else if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.NNAR_INTERNAL_READ)){
+                    System.out.println(process.debugName + " got NNAR INTERNAL READ \n" + message);
+                    String toAbstractionId = message.getNetworkMessage().getMessage().getToAbstractionId();
+                    String register = String.valueOf(toAbstractionId.charAt(9));
+                    registerAbstraction(register);
+                    process.messages.add(message);
+                }
+                else if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.NNAR_INTERNAL_VALUE)){
+                    System.out.println(process.debugName + " got NNAR INTERNAL VALUE \n" + message);
+                    process.messages.add(message);
+                }
+                else if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.NNAR_INTERNAL_WRITE)){
+                    System.out.println(process.debugName + " got NNAR INTERNAL WRITE \n");
+                    process.messages.add(message);
+                }
+                else if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.NNAR_INTERNAL_ACK)){
+                    System.out.println(process.debugName + " got NNAR INTERNAL ACK \n");
+                    process.messages.add(message);
+                }
+                else if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.APP_READ)){
+                    process.messages.add(message);
+                    System.out.println("Got App Read\n");
+                }
+                socket.close();
 
             }
         } catch (IOException e) {
@@ -87,4 +115,24 @@ public class Listener extends Thread {
             t.start();
      }
    }
+
+    private void registerAbstraction(String register) {
+        if (process.abstractionInterfaceMap.get("app.nnar[" + register + "]") == null) {
+            process.abstractionInterfaceMap.put("app.nnar[" + register + "]", new NNAR());
+            process.abstractionInterfaceMap.get("app.nnar[" + register + "]").init(process);
+
+            process.abstractionInterfaceMap.put("app.nnar[" + register + "].pl", new PL());
+            process.abstractionInterfaceMap.get("app.nnar[" + register + "].pl").init(process);
+
+            process.abstractionInterfaceMap.put("app.nnar[" + register + "].beb", new BEB());
+            process.abstractionInterfaceMap.get("app.nnar[" + register + "].beb").init(process);
+
+            process.abstractionInterfaceMap.put("app.nnar[" + register + "].beb.pl", new PL());
+            process.abstractionInterfaceMap.get("app.nnar[" + register + "].beb.pl").init(process);
+
+            process.register = register;
+
+            System.out.println("Registered NNAR on " + process.debugName);
+        }
+    }
 }
