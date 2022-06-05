@@ -11,14 +11,14 @@ public class NNAR implements AbstractionInterface {
     public void init(Proc p) {
 
         process = p;
-        process.rid = 0;
-        process.ts = 0;
-        process.value = -1;
-        process.acks = 0;
-        process.writeVal = 0;
-        process.readVal = 0;
-        process.readList = new NnarInternalValue[6];
-        process.reading = false;
+        process.sharedMemory.rid = 0;
+        process.sharedMemory.ts = 0;
+        process.sharedMemory.value = -1;
+        process.sharedMemory.acks = 0;
+        process.sharedMemory.writeVal = 0;
+        process.sharedMemory.readVal = 0;
+        process.sharedMemory.readList = new NnarInternalValue[6];
+        process.sharedMemory.reading = false;
     }
 
     @Override
@@ -26,141 +26,106 @@ public class NNAR implements AbstractionInterface {
 
         switch (message.getType()) {
             case NNAR_WRITE:
-                process.rid = process.rid + 1;
-                process.writeVal = message.getNnarWrite().getValue().getV();
+                process.sharedMemory.rid = process.sharedMemory.rid + 1;
+                process.sharedMemory.writeVal = message.getNnarWrite().getValue().getV();
 
-                process.acks = 0;
-                process.readList = new NnarInternalValue[6];
+                process.sharedMemory.acks = 0;
+                process.sharedMemory.readList = new NnarInternalValue[6];
 
-                Message intRead = Message.newBuilder()
+                Message msgWrite = Message.newBuilder()
                         .setType(Message.Type.NNAR_INTERNAL_READ)
-                        .setFromAbstractionId("app.nnar[" + process.register + "]")
-                        .setToAbstractionId("app.nnar[" + process.register + "]")
+                        .setFromAbstractionId(process.sharedMemory.appNnar)
+                        .setToAbstractionId(process.sharedMemory.appNnar)
                         .setSystemId("sys-1")
                         .setNnarInternalRead(NnarInternalRead.newBuilder()
-                                .setReadId(process.rid)
+                                .setReadId(process.sharedMemory.rid)
                                 .build())
                         .build();
-                Message msg = Message.newBuilder()
-                        .setFromAbstractionId("app.nnar[" + process.register + "]")
-                        .setToAbstractionId("app.nnar[" + process.register + "].beb")
-                        .setType(Message.Type.BEB_BROADCAST)
-                        .setBebBroadcast(BebBroadcast.newBuilder()
-                                .setMessage(intRead)
-                                .build())
-                        .build();
-                process.messages.add(msg);
+                bebBroadcastParams(msgWrite, process.sharedMemory.appNnar, process.sharedMemory.appNnar + ".beb");
                 return true;
 
             case NNAR_READ:
 
-                process.rid = process.rid + 1;
-                process.writeVal = message.getNnarWrite().getValue().getV();
-                process.acks = 0;
-                process.readList = new NnarInternalValue[6];
-                process.reading = true;
-                Message intRead2 = Message.newBuilder()
+                process.sharedMemory.rid = process.sharedMemory.rid + 1;
+                process.sharedMemory.writeVal = message.getNnarWrite().getValue().getV();
+                process.sharedMemory.acks = 0;
+                process.sharedMemory.readList = new NnarInternalValue[6];
+                process.sharedMemory.reading = true;
+                Message msgRead = Message.newBuilder()
                         .setType(Message.Type.NNAR_INTERNAL_READ)
-                        .setFromAbstractionId("app.nnar[" + process.register + "]")
-                        .setToAbstractionId("app.nnar[" + process.register + "]")
+                        .setFromAbstractionId(process.sharedMemory.appNnar)
+                        .setToAbstractionId(process.sharedMemory.appNnar)
                         .setSystemId("sys-1")
                         .setNnarInternalRead(NnarInternalRead.newBuilder()
-                                .setReadId(process.rid)
+                                .setReadId(process.sharedMemory.rid)
                                 .build())
                         .build();
-                Message msg2 = Message.newBuilder()
-                        .setFromAbstractionId("app.nnar[" + process.register + "]")
-                        .setToAbstractionId("app.nnar[" + process.register + "].beb")
-                        .setType(Message.Type.BEB_BROADCAST)
-                        .setBebBroadcast(BebBroadcast.newBuilder()
-                                .setMessage(intRead2)
-                                .build())
-                        .build();
-                process.messages.add(msg2);
+                bebBroadcastParams(msgRead, process.sharedMemory.appNnar, process.sharedMemory.appNnar + ".beb");
                 return true;
             case BEB_DELIVER:
                 if (message.getBebDeliver().getMessage().getType().equals(Message.Type.NNAR_INTERNAL_READ)) {
-                    Message msg1 = Message.newBuilder()
-                            .setType(Message.Type.PL_SEND)
-                            .setFromAbstractionId(message.getToAbstractionId())
-                            .setToAbstractionId(message.getToAbstractionId() + ".pl")
-                            .setSystemId("sys-1")
-                            .setPlSend(PlSend.newBuilder()
-                                    .setMessage(Message.newBuilder()
-                                            .setType(Message.Type.NNAR_INTERNAL_VALUE)
-                                            .setFromAbstractionId("app.nnar[" + process.register + "]")
-                                            .setToAbstractionId("app.nnar[" + process.register + "]")
-                                            .setNnarInternalValue(NnarInternalValue.newBuilder()
-                                                    .setTimestamp(process.ts)
-                                                    .setReadId(message.getBebDeliver().getMessage().getNnarInternalRead().getReadId())
-                                                    .setValue(Value.newBuilder()
-                                                            .setDefined(true)
-                                                            .setV(process.value)
-                                                            .build())
-                                                    .setWriterRank(process.writerRank)
-                                                    .build())
+                    Message msg = Message.newBuilder()
+                            .setType(Message.Type.NNAR_INTERNAL_VALUE)
+                            .setFromAbstractionId(process.sharedMemory.appNnar)
+                            .setToAbstractionId(process.sharedMemory.appNnar)
+                            .setNnarInternalValue(NnarInternalValue.newBuilder()
+                                    .setTimestamp(process.sharedMemory.ts)
+                                    .setReadId(message.getBebDeliver().getMessage().getNnarInternalRead().getReadId())
+                                    .setValue(Value.newBuilder()
+                                            .setDefined(true)
+                                            .setV(process.sharedMemory.value)
                                             .build())
-                                    .setDestination(message.getBebDeliver().getSender())
+                                    .setWriterRank(process.sharedMemory.writerRank)
                                     .build())
                             .build();
-                    process.messages.add(msg1);
+                    plSendParams(msg, message.getToAbstractionId(), message.getToAbstractionId() + ".pl", message.getBebDeliver().getSender());
 
                     return true;
                 }
 
             case PL_DELIVER:
                 if (message.getPlDeliver().getMessage().getType().equals(Message.Type.NNAR_INTERNAL_VALUE)) {
-                    //ultima parte din read
-                    if (message.getPlDeliver().getMessage().getNnarInternalValue().getReadId() == process.rid) {
+                    if (message.getPlDeliver().getMessage().getNnarInternalValue().getReadId() == process.sharedMemory.rid) {
                         int processIndex = message.getPlDeliver().getSender().getPort() - 5001;
 
-                        process.readList[processIndex] = message.getPlDeliver().getMessage().getNnarInternalValue();
+                        process.sharedMemory.readList[processIndex] = message.getPlDeliver().getMessage().getNnarInternalValue();
                         if (readListOccupied() > 3) {
-                            NnarInternalValue maxts = maxTimestamp();
-                            process.readVal = maxts.getValue().getV();
-                            process.readList = new NnarInternalValue[6];
-                            Message msgNm;
-                            if (process.reading) {
-                                msgNm = Message.newBuilder()
+                            NnarInternalValue maxTs = maxTimestamp();
+                            process.sharedMemory.readVal = maxTs.getValue().getV();
+                            process.sharedMemory.readList = new NnarInternalValue[6];
+                            Message msgWriteInternal = null;
+                            if (process.sharedMemory.reading) {
+                                msgWriteInternal = Message.newBuilder()
                                         .setType(Message.Type.NNAR_INTERNAL_WRITE)
-                                        .setToAbstractionId("app.nnar[" + process.register + "]")
-                                        .setFromAbstractionId("app.nnar[" + process.register + "]")
+                                        .setToAbstractionId(process.sharedMemory.appNnar)
+                                        .setFromAbstractionId(process.sharedMemory.appNnar)
                                         .setNnarInternalWrite(NnarInternalWrite.newBuilder()
-                                                .setTimestamp(maxts.getTimestamp())
+                                                .setTimestamp(maxTs.getTimestamp())
                                                 .setValue(Value.newBuilder()
-                                                        .setV(process.readVal)
+                                                        .setV(process.sharedMemory.readVal)
                                                         .setDefined(true)
                                                         .build())
-                                                .setWriterRank(maxts.getWriterRank())
-                                                .setReadId(process.rid)
+                                                .setWriterRank(maxTs.getWriterRank())
+                                                .setReadId(process.sharedMemory.rid)
                                                 .build())
                                         .build();
                             } else {
-                                msgNm = Message.newBuilder()
+                                msgWriteInternal = Message.newBuilder()
                                         .setType(Message.Type.NNAR_INTERNAL_WRITE)
-                                        .setToAbstractionId("app.nnar[" + process.register + "]")
-                                        .setFromAbstractionId("app.nnar[" + process.register + "]")
+                                        .setToAbstractionId(process.sharedMemory.appNnar)
+                                        .setFromAbstractionId(process.sharedMemory.appNnar)
                                         .setNnarInternalWrite(NnarInternalWrite.newBuilder()
-                                                .setTimestamp(maxts.getTimestamp() + 1)
+                                                .setTimestamp(maxTs.getTimestamp() + 1)
                                                 .setValue(Value.newBuilder()
                                                         .setDefined(true)
-                                                        .setV(process.writeVal).build())
+                                                        .setV(process.sharedMemory.writeVal).build())
                                                 .setWriterRank(process.rank)
-                                                .setReadId(process.rid)
+                                                .setReadId(process.sharedMemory.rid)
                                                 .build())
                                         .build();
                             }
 
-                            Message msg1 = Message.newBuilder()
-                                    .setType(Message.Type.BEB_BROADCAST)
-                                    .setFromAbstractionId("app.nnar[" + process.register + "]")
-                                    .setToAbstractionId("app.nnar[" + process.register + "].beb")
-                                    .setSystemId("sys-1")
-                                    .setBebBroadcast(BebBroadcast.newBuilder()
-                                            .setMessage(msgNm)
-                                            .build())
-                                    .build();
-                            process.messages.add(msg1);
+                            bebBroadcastParams(msgWriteInternal, process.sharedMemory.appNnar, process.sharedMemory.appNnar + ".beb");
                         }
                     }
                     return true;
@@ -168,54 +133,36 @@ public class NNAR implements AbstractionInterface {
 
                 if (message.getPlDeliver().getMessage().getType().equals(Message.Type.NNAR_INTERNAL_ACK)) {
 
-                    if (message.getPlDeliver().getMessage().getNnarInternalAck().getReadId() == process.rid) {
-                        process.acks += 1;
+                    if (message.getPlDeliver().getMessage().getNnarInternalAck().getReadId() == process.sharedMemory.rid) {
+                        process.sharedMemory.acks += 1;
 
-                        if (process.acks > 3) {
-                            process.acks = 0;
-                            if (process.reading) {
-                                process.reading = false;
-                                Message msgRead = Message.newBuilder()
-                                        .setType(Message.Type.PL_DELIVER)
-                                        .setFromAbstractionId(message.getToAbstractionId())
-                                        .setToAbstractionId(message.getToAbstractionId() + ".pl")
-                                        .setSystemId("sys-1")
-                                        .setPlDeliver(PlDeliver.newBuilder()
-                                                .setSender(message.getPlDeliver().getSender())
-                                                .setMessage(Message.newBuilder()
-                                                        .setType(Message.Type.APP_READ_RETURN)
-                                                        .setToAbstractionId("hub")
-                                                        .setFromAbstractionId("app")
-                                                        .setAppReadReturn(AppReadReturn.newBuilder()
-                                                                .setRegister(process.register)
-                                                                .setValue(Value.newBuilder()
-                                                                        .setDefined(true)
-                                                                        .setV(process.readVal)
-                                                                        .build())
-                                                                .build())
+                        if (process.sharedMemory.acks > 3) {
+                            process.sharedMemory.acks = 0;
+                            if (process.sharedMemory.reading) {
+                                process.sharedMemory.reading = false;
+                                Message msgReadReturn = Message.newBuilder()
+                                        .setType(Message.Type.APP_READ_RETURN)
+                                        .setToAbstractionId("hub")
+                                        .setFromAbstractionId("app")
+                                        .setAppReadReturn(AppReadReturn.newBuilder()
+                                                .setRegister(process.sharedMemory.register)
+                                                .setValue(Value.newBuilder()
+                                                        .setDefined(true)
+                                                        .setV(process.sharedMemory.readVal)
                                                         .build())
                                                 .build())
                                         .build();
-                                process.messages.add(msgRead);
+                                plDeliverParams(msgReadReturn, message.getToAbstractionId(), message.getToAbstractionId() + ".pl", message.getPlDeliver().getSender());
                             } else {
-                                Message msgWrite = Message.newBuilder()
-                                        .setType(Message.Type.PL_DELIVER)
-                                        .setFromAbstractionId(message.getToAbstractionId())
-                                        .setToAbstractionId(message.getToAbstractionId() + ".pl")
-                                        .setSystemId("sys-1")
-                                        .setPlDeliver(PlDeliver.newBuilder()
-                                                .setSender(message.getPlDeliver().getSender())
-                                                .setMessage(Message.newBuilder()
-                                                        .setType(Message.Type.APP_WRITE_RETURN)
-                                                        .setToAbstractionId("hub")
-                                                        .setFromAbstractionId("app")
-                                                        .setAppWriteReturn(AppWriteReturn.newBuilder()
-                                                                .setRegister(process.register)
-                                                                .build())
-                                                        .build())
+                                Message msgWriteReturn = Message.newBuilder()
+                                        .setType(Message.Type.APP_WRITE_RETURN)
+                                        .setToAbstractionId("hub")
+                                        .setFromAbstractionId("app")
+                                        .setAppWriteReturn(AppWriteReturn.newBuilder()
+                                                .setRegister(process.sharedMemory.register)
                                                 .build())
                                         .build();
-                                process.messages.add(msgWrite);
+                                plDeliverParams(msgWriteReturn, message.getToAbstractionId(), message.getToAbstractionId() + ".pl", message.getPlDeliver().getSender());
                             }
                         }
                     }
@@ -225,10 +172,47 @@ public class NNAR implements AbstractionInterface {
         return false;
     }
 
+    private void bebBroadcastParams(Message message, String from, String to) {
+        Message msg = Message.newBuilder()
+                .setType(Message.Type.BEB_BROADCAST)
+                .setBebBroadcast(BebBroadcast.newBuilder()
+                        .setMessage(message)
+                        .build())
+                .setFromAbstractionId(from)
+                .setToAbstractionId(to)
+                .build();
+        process.messages.add(msg);
+    }
+
+    public void plSendParams(Message message, String from, String to, ProcessId pid) {
+        process.messages.add(Message.newBuilder()
+                .setType(Message.Type.PL_SEND)
+                .setPlSend(PlSend.newBuilder()
+                        .setMessage(message)
+                        .setDestination(pid)
+                        .build())
+                .setSystemId("sys-1")
+                .setFromAbstractionId(from)
+                .setToAbstractionId(to)
+                .build());
+    }
+
+    private void plDeliverParams(Message message, String from, String to, ProcessId pid) {
+        process.messages.add(Message.newBuilder()
+                .setType(Message.Type.PL_DELIVER)
+                .setPlDeliver(PlDeliver.newBuilder()
+                        .setSender(pid)
+                        .setMessage(message).build())
+                .setFromAbstractionId(from)
+                .setToAbstractionId(to)
+                .setSystemId("sys-1")
+                .build());
+    }
+
     private int readListOccupied() {
         int c = 0;
-        for (int i = 0; i < process.readList.length; i++) {
-            if (process.readList[i] != null) {
+        for (int i = 0; i < process.sharedMemory.readList.length; i++) {
+            if (process.sharedMemory.readList[i] != null) {
                 c++;
             }
         }
@@ -236,26 +220,26 @@ public class NNAR implements AbstractionInterface {
     }
 
     private NnarInternalValue maxTimestamp() {
-        int mtsOccurrence = 0;
-        NnarInternalValue mts = process.readList[0];
-        for (int i = 1; i < process.readList.length; i++) {
-            if (mts != null && process.readList[i] != null &&
-                    (process.readList[i].getTimestamp() > mts.getTimestamp()) &&
-                    (process.readList[i].getValue().getV() != -1)) {
+        int maxTsOccurrence = 0;
+        NnarInternalValue maxTs = process.sharedMemory.readList[0];
+        for (int i = 1; i < process.sharedMemory.readList.length; i++) {
+            if (maxTs != null && process.sharedMemory.readList[i] != null &&
+                    (process.sharedMemory.readList[i].getTimestamp() > maxTs.getTimestamp()) &&
+                    (process.sharedMemory.readList[i].getValue().getV() != -1)) {
 
-                mts = process.readList[i];
-                mtsOccurrence++;
+                maxTs = process.sharedMemory.readList[i];
+                maxTsOccurrence++;
             }
         }
-        if (mtsOccurrence > 1) {
-            for (int i = 1; i < process.readList.length; i++) {
-                if (process.readList[i] == mts && process.readList[i].getWriterRank() > mts.getWriterRank()
-                        && process.readList[i].getValue().getV() != -1
+        if (maxTsOccurrence > 1) {
+            for (int i = 1; i < process.sharedMemory.readList.length; i++) {
+                if (process.sharedMemory.readList[i] == maxTs && process.sharedMemory.readList[i].getWriterRank() > maxTs.getWriterRank()
+                        && process.sharedMemory.readList[i].getValue().getV() != -1
                 ) {
-                    mts = process.readList[i];
+                    maxTs = process.sharedMemory.readList[i];
                 }
             }
         }
-        return mts;
+        return maxTs;
     }
 }

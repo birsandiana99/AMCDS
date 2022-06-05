@@ -20,8 +20,6 @@ public class Listener extends Thread {
     private boolean running;
     private Proc process;
 
-    private static int registerValue = 0;
-
     public Listener(String threadName, int port, Proc p) throws IOException {
         this.threadName = threadName;
         processSocket = new ServerSocket(port);
@@ -41,7 +39,7 @@ public class Listener extends Thread {
                 Message message = MessageUtils.read(socket.getInputStream());
 
                 if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.PROC_INITIALIZE_SYSTEM)) {
-                    System.out.println("Got proc init system " + process.owner + "-" + process.index);
+                    System.out.println(process.debugName + " received PROC INITIALIZE SYSTEM \n");
 
                     process.processes = message.getNetworkMessage().getMessage().getProcInitializeSystem().getProcessesList();
                     process.rank = process.processes.get(process.index).getRank();
@@ -62,43 +60,43 @@ public class Listener extends Thread {
                     process.abstractionInterfaceMap.get("app.beb.pl").init(process);
                 }
                 else if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.PROC_DESTROY_SYSTEM)) {
-                    System.out.println("DESTROY PROC " + process.owner + "-" + process.index);
+                    System.out.println(process.debugName + " received PROC DESTROY SYSTEM \n");
                     process.abstractionInterfaceMap.clear();
 
                 }
-                else if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.APP_BROADCAST)){
-                    System.out.println("Got Network App Broadcast " + process.owner + "-" + process.index);
+                else if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.APP_BROADCAST)) {
+                    System.out.println(process.debugName + " received APP BROADCAST \n");
                     process.messages.add(message);
                 }
                 else if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.APP_VALUE)) {
                     process.messages.add(message);
                 }
-                else if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.APP_WRITE)){
+                else if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.APP_WRITE)) {
+                    System.out.println(process.debugName + " received APP WRITE \n");
                     process.messages.add(message);
-                    System.out.println("Got App Write");
                 }
-                else if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.NNAR_INTERNAL_READ)){
-                    System.out.println(process.debugName + " got NNAR INTERNAL READ \n" + message);
+                else if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.NNAR_INTERNAL_READ)) {
+                    System.out.println(process.debugName + " received NNAR INTERNAL READ \n");
                     String toAbstractionId = message.getNetworkMessage().getMessage().getToAbstractionId();
                     String register = String.valueOf(toAbstractionId.charAt(9));
                     registerAbstraction(register);
                     process.messages.add(message);
                 }
-                else if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.NNAR_INTERNAL_VALUE)){
-                    System.out.println(process.debugName + " got NNAR INTERNAL VALUE \n" + message);
+                else if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.NNAR_INTERNAL_VALUE)) {
+                    System.out.println(process.debugName + " received NNAR INTERNAL VALUE \n");
                     process.messages.add(message);
                 }
-                else if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.NNAR_INTERNAL_WRITE)){
-                    System.out.println(process.debugName + " got NNAR INTERNAL WRITE \n");
+                else if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.NNAR_INTERNAL_WRITE)) {
+                    System.out.println(process.debugName + " received NNAR INTERNAL WRITE \n");
                     process.messages.add(message);
                 }
-                else if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.NNAR_INTERNAL_ACK)){
-                    System.out.println(process.debugName + " got NNAR INTERNAL ACK \n");
+                else if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.NNAR_INTERNAL_ACK)) {
+                    System.out.println(process.debugName + " received NNAR INTERNAL ACK \n");
                     process.messages.add(message);
                 }
-                else if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.APP_READ)){
+                else if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.APP_READ)) {
+                    System.out.println(process.debugName + " received APP READ \n");
                     process.messages.add(message);
-                    System.out.println("Got App Read\n");
                 }
                 socket.close();
 
@@ -130,7 +128,8 @@ public class Listener extends Thread {
             process.abstractionInterfaceMap.put("app.nnar[" + register + "].beb.pl", new PL());
             process.abstractionInterfaceMap.get("app.nnar[" + register + "].beb.pl").init(process);
 
-            process.register = register;
+            process.sharedMemory.register = register;
+            process.sharedMemory.appNnar = "app.nnar[" + register + "]";
 
             System.out.println("Registered NNAR on " + process.debugName);
         }

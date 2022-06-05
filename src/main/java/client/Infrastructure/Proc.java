@@ -1,6 +1,7 @@
 package client.Infrastructure;
 
 import client.Algorithm.AbstractionInterface;
+import client.Utilities.SharedMemory;
 import main.CommunicationProtocol.*;
 
 import java.io.IOException;
@@ -28,20 +29,10 @@ public class Proc {
 
     public List<ProcessId> processes = new ArrayList<>();
     public Map<String, AbstractionInterface> abstractionInterfaceMap = new HashMap<String, AbstractionInterface>();
-
+    public int value;
     public List<Message> messages = new ArrayList<>();
 
-    public int value;
-    public int rid;
-    public int writerRank;
-    public int ts;
-    public int acks;
-    public int writeVal;
-    public int readVal;
-
-    public NnarInternalValue[] readList;
-    public boolean reading;
-    public String register;
+    public SharedMemory sharedMemory;
 
     public Proc(int p, int i, int rp) throws UnknownHostException, IOException {
         socketHub = new Socket(ADDR_HUB, PORT_HUB);
@@ -51,6 +42,7 @@ public class Proc {
         index = i;
         refPort = rp;
         debugName = owner + "-" + index;
+        sharedMemory = new SharedMemory();
     }
 
     public ProcessId getProcByPort(int port) {

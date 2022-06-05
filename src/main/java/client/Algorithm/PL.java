@@ -27,390 +27,257 @@ public class PL implements AbstractionInterface {
                             .setToAbstractionId("app")
                             .setSystemId("sys-1")
                             .setAppBroadcast(AppBroadcast.newBuilder()
-                                    .setValue(message.getNetworkMessage().getMessage().getAppBroadcast().getValue()).build()).build();
-                    plDeliver(msg);
+                                    .setValue(message.getNetworkMessage().getMessage().getAppBroadcast().getValue())
+                                    .build())
+                            .build();
+                    plDeliverParams(msg, message.getNetworkMessage().getMessage().getFromAbstractionId(),
+                            message.getNetworkMessage().getMessage().getToAbstractionId(), process.pid);
                     return true;
                 }
                 if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.APP_VALUE)) {
-                    broadcastPlDeliver(message.getNetworkMessage().getMessage());
+                    Message msg = Message.newBuilder()
+                            .setType(Message.Type.APP_VALUE)
+                            .setFromAbstractionId("app.beb.pl")
+                            .setToAbstractionId("app.beb")
+                            .setAppValue(message.getNetworkMessage().getMessage().getAppValue())
+                            .build();
+                    plDeliverParams(msg,"app.beb.pl","app.beb", process.pid);
                     return true;
                 }
                 if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.APP_WRITE)) {
-                    Message msg = message.getNetworkMessage().getMessage();
-                    Message plDelMsg = Message.newBuilder()
-                            .setType(Message.Type.PL_DELIVER)
-                            .setFromAbstractionId("app.pl")
-                            .setToAbstractionId("app")
-                            .setPlDeliver(PlDeliver.newBuilder()
-                                    .setMessage(msg)
+                    String register = message.getNetworkMessage().getMessage().getAppWrite().getRegister();
+                    registerAbstraction(register);
+                    Message msg = Message.newBuilder()
+                            .setType(Message.Type.NNAR_WRITE)
+                            .setFromAbstractionId("app")
+                            .setToAbstractionId(process.sharedMemory.appNnar)
+                            .setSystemId("sys-1")
+                            .setNnarWrite(NnarWrite.newBuilder()
+                                    .setValue(message.getNetworkMessage().getMessage().getAppWrite().getValue())
                                     .build())
                             .build();
-                    process.messages.add(plDelMsg);
+                    process.messages.add(msg);
+                    return true;
+                }
+                if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.NNAR_INTERNAL_READ)){
+                    String toAbstractionId = message.getNetworkMessage().getMessage().getToAbstractionId();
+                    plDeliverParams(message.getNetworkMessage().getMessage(),toAbstractionId+".beb.pl",toAbstractionId+".beb", process.pid);
+                    return true;
+                }
+                if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.NNAR_INTERNAL_VALUE)){
+                    int portSender = message.getNetworkMessage().getSenderListeningPort();
+                    ProcessId senderPID = process.getProcByPort(portSender);
+
+                    plDeliverParams(message.getNetworkMessage().getMessage(),process.sharedMemory.appNnar+".beb.pl",
+                            process.sharedMemory.appNnar, senderPID);
+                    return true;
+                }
+                if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.NNAR_INTERNAL_WRITE)){
+                    int portSender = message.getNetworkMessage().getSenderListeningPort();
+                    ProcessId senderPID = process.getProcByPort(portSender);
+                    bebDeliverParams(message.getNetworkMessage().getMessage(),process.sharedMemory.appNnar+".beb.pl",
+                            process.sharedMemory.appNnar+".beb", senderPID);
+                    return true;
+                }
+                if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.NNAR_INTERNAL_ACK)){
+                    int portSender = message.getNetworkMessage().getSenderListeningPort();
+                    ProcessId senderPID = process.getProcByPort(portSender);
+                    plDeliverParams(message.getNetworkMessage().getMessage(),process.sharedMemory.appNnar+".beb.pl",
+                            process.sharedMemory.appNnar, senderPID);
                     return true;
                 }
                 if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.APP_READ)) {
-                    Message msg = message.getNetworkMessage().getMessage();
-                    Message plDelMsg = Message.newBuilder()
-                            .setType(Message.Type.PL_DELIVER)
-                            .setFromAbstractionId("app.pl")
-                            .setToAbstractionId("app")
-                            .setPlDeliver(PlDeliver.newBuilder()
-                                    .setMessage(msg)
-                                    .build())
-                            .build();
-                    process.messages.add(plDelMsg);
-                    return true;
-                }
-                if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.NNAR_INTERNAL_READ)) {
-                    String toAbstractionId = message.getNetworkMessage().getMessage().getToAbstractionId();
-
+                    String register = message.getNetworkMessage().getMessage().getAppRead().getRegister();
+                    registerAbstraction(register);
                     Message msg = Message.newBuilder()
-                            .setType(Message.Type.PL_DELIVER)
+                            .setType(Message.Type.NNAR_READ)
+                            .setFromAbstractionId("app")
+                            .setToAbstractionId(process.sharedMemory.appNnar)
                             .setSystemId("sys-1")
-                            .setFromAbstractionId(toAbstractionId + ".beb.pl")
-                            .setToAbstractionId(toAbstractionId + ".beb")
-                            .setPlDeliver(PlDeliver.newBuilder()
-                                    .setMessage(message.getNetworkMessage().getMessage())
+                            .setNnarRead(NnarRead.newBuilder()
                                     .build())
                             .build();
                     process.messages.add(msg);
                     return true;
                 }
-                if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.NNAR_INTERNAL_VALUE)) {
-                    int portSender = message.getNetworkMessage().getSenderListeningPort();
-                    ProcessId senderPID = process.getProcByPort(portSender);
 
-                    Message msg = Message.newBuilder()
-                            .setType(Message.Type.PL_DELIVER)
-                            .setFromAbstractionId("app.nnar[" + process.register + "].beb.pl")
-                            .setToAbstractionId("app.nnar[" + process.register + "].beb")
-                            .setPlDeliver(PlDeliver.newBuilder()
-                                    .setSender(senderPID)
-                                    .setMessage(message.getNetworkMessage().getMessage())
-                                    .build())
-                            .build();
-                    process.messages.add(msg);
-                    return true;
-                }
-                if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.NNAR_INTERNAL_WRITE)) {
-                    int portSender = message.getNetworkMessage().getSenderListeningPort();
-                    ProcessId senderPID = process.getProcByPort(portSender);
-
-                    Message msg = Message.newBuilder()
-                            .setType(Message.Type.BEB_DELIVER)
-                            .setFromAbstractionId("app.nnar[" + process.register + "].beb.pl")
-                            .setToAbstractionId("app.nnar[" + process.register + "].beb")
-                            .setBebDeliver(BebDeliver.newBuilder()
-                                    .setSender(senderPID)
-                                    .setMessage(message.getNetworkMessage().getMessage())
-                                    .build())
-                            .build();
-                    process.messages.add(msg);
-                    return true;
-                }
-                if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.NNAR_INTERNAL_ACK)) {
-                    int portSender = message.getNetworkMessage().getSenderListeningPort();
-                    ProcessId senderPID = process.getProcByPort(portSender);
-
-                    Message msg = Message.newBuilder()
-                            .setType(Message.Type.PL_DELIVER)
-                            .setFromAbstractionId("app.nnar[" + process.register + "].beb.pl")
-                            .setToAbstractionId("app.nnar[" + process.register + "].beb")
-                            .setPlDeliver(PlDeliver.newBuilder()
-                                    .setSender(senderPID)
-                                    .setMessage(message.getNetworkMessage().getMessage())
-                                    .build())
-                            .build();
-                    process.messages.add(msg);
-                    return true;
-                }
             case PL_SEND:
-                if (message.getToAbstractionId().equals("app.beb.pl")) {
-                    sendSocket(
-                            message.getPlSend().getDestination().getHost(),
-                            message.getPlSend().getDestination().getPort(),
-                            message.getPlSend().getMessage());
-                    return true;
-                }
                 if (message.getToAbstractionId().equals("app.pl")) {
-                    plSendToHub(message.getPlSend().getMessage());
+                    Message m = Message.newBuilder()
+                            .setType(Message.Type.APP_VALUE)
+                            .setMessageUuid(message.getPlSend().getMessage().getMessageUuid())
+                            .setAppValue(message.getPlSend().getMessage().getAppValue())
+                            .setFromAbstractionId("app.pl")
+                            .setToAbstractionId("hub")
+                            .setSystemId("sys-1")
+                            .build();
+                    sendToHub(m, "app.pl", "hub", process.port);
                     return true;
                 }
-                if (message.getPlSend().getMessage().getType().equals(Message.Type.NNAR_INTERNAL_READ)) {
-                    Socket socket = null;
-                    String senderHost = message.getPlSend().getDestination().getHost();
-                    int senderPort = message.getPlSend().getDestination().getPort();
-
-                    try {
-                        socket = new Socket(senderHost, senderPort);
-                        Message newMessage = Message.newBuilder()
-                                .setType(Message.Type.NETWORK_MESSAGE)
-                                .setSystemId("sys-1")
-                                .setFromAbstractionId("app.nnar[" + process.register + "].beb.pl")
-                                .setToAbstractionId("app.nnar[" + process.register + "].beb.pl")
-                                .setNetworkMessage(NetworkMessage.newBuilder()
-                                        .setSenderHost(senderHost)
-                                        .setSenderListeningPort(process.port)
-                                        .setMessage(Message.newBuilder()
-                                                .setType(Message.Type.NNAR_INTERNAL_READ)
-                                                .setNnarInternalRead(message.getPlSend().getMessage().getNnarInternalRead())
-                                                .setFromAbstractionId("app.nnar[" + process.register + "]")
-                                                .setToAbstractionId("app.nnar[" + process.register + "]")
-                                                .setSystemId("sys-1")
-                                                .build())
-                                        .build())
-                                .build();
-                        MessageUtils.write(socket.getOutputStream(), newMessage);
-                        System.out.println("NNAR_INTERNAL_READ: " + newMessage);
-                        socket.close();
-                        return true;
-                    } catch (IOException e) {
-                        System.out.println("Socket error - could not send!");
-                    }
+                if (message.getToAbstractionId().equals("app.beb.pl")) {
+                    Message appVal = Message.newBuilder()
+                            .setType(Message.Type.APP_VALUE)
+                            .setMessageUuid(message.getPlSend().getMessage().getMessageUuid())
+                            .setAppValue(message.getPlSend().getMessage().getAppValue())
+                            .setFromAbstractionId("app.beb.pl")
+                            .setToAbstractionId("app")
+                            .setSystemId("sys-1")
+                            .build();
+                    sendToProc(appVal, "app.beb.pl", "app.beb.pl",
+                            message.getPlSend().getDestination().getHost(),
+                            message.getPlSend().getDestination().getPort(), message.getPlSend().getDestination().getPort());
+                    return true;
                 }
-                if (message.getPlSend().getMessage().getType().equals(Message.Type.NNAR_INTERNAL_VALUE)) {
-                    Socket socket = null;
-                    String senderHost = message.getPlSend().getDestination().getHost();
-                    int senderPort = message.getPlSend().getDestination().getPort();
+                if (message.getPlSend().getMessage().getType().equals(Message.Type.NNAR_INTERNAL_READ)){
+                    Message msg = Message.newBuilder()
+                            .setType(Message.Type.NNAR_INTERNAL_READ)
+                            .setNnarInternalRead(message.getPlSend().getMessage().getNnarInternalRead())
+                            .setFromAbstractionId(process.sharedMemory.appNnar)
+                            .setToAbstractionId("app.nnar["+process.sharedMemory.register+"]")
+                            .setSystemId("sys-1")
+                            .build();
 
-                    try {
-                        socket = new Socket(senderHost, senderPort);
-                        Message newMessage = Message.newBuilder()
-                                .setType(Message.Type.NETWORK_MESSAGE)
-                                .setSystemId("sys-1")
-                                .setFromAbstractionId(message.getToAbstractionId())
-                                .setToAbstractionId(message.getToAbstractionId())
-                                .setNetworkMessage(NetworkMessage.newBuilder()
-                                        .setSenderHost(senderHost)
-                                        .setSenderListeningPort(process.port)
-                                        .setMessage(message.getPlSend().getMessage())
-                                        .build())
-                                .build();
-                        MessageUtils.write(socket.getOutputStream(), newMessage);
-                        System.out.println("NNAR_INTERNAL_VALUE: " + newMessage);
-                        socket.close();
-                        return true;
-                    } catch (IOException e) {
-                        System.out.println("Socket error - could not send!");
-                    }
+                    sendToProc(msg,process.sharedMemory.appNnar+".beb.pl", process.sharedMemory.appNnar+".beb.pl",
+                            message.getPlSend().getDestination().getHost(), message.getPlSend().getDestination().getPort(), process.port);
+                    return true;
                 }
-                if (message.getPlSend().getMessage().getType().equals(Message.Type.NNAR_INTERNAL_WRITE)) {
-                    Socket socket = null;
+                if(message.getPlSend().getMessage().getType().equals(Message.Type.NNAR_INTERNAL_VALUE)){
                     String senderHost = message.getPlSend().getDestination().getHost();
                     int senderPort = message.getPlSend().getDestination().getPort();
-
-                    try {
-                        socket = new Socket(senderHost, senderPort);
-                        Message newMessage = Message.newBuilder()
-                                .setType(Message.Type.NETWORK_MESSAGE)
-                                .setSystemId("sys-1")
-                                .setFromAbstractionId("app.nnar[" + process.register + "].beb.pl")
-                                .setToAbstractionId("app.nnar[" + process.register + "].beb.pl")
-                                .setNetworkMessage(NetworkMessage.newBuilder()
-                                        .setSenderHost(senderHost)
-                                        .setSenderListeningPort(process.port)
-                                        .setMessage(Message.newBuilder()
-                                                .setType(Message.Type.NNAR_INTERNAL_WRITE)
-                                                .setNnarInternalWrite(message.getPlSend().getMessage().getNnarInternalWrite())
-                                                .setFromAbstractionId("app.nnar[" + process.register + "]")
-                                                .setToAbstractionId("app.nnar[" + process.register + "]")
-                                                .setSystemId("sys-1")
-                                                .build())
-                                        .build())
-                                .build();
-                        MessageUtils.write(socket.getOutputStream(), newMessage);
-                        System.out.println("NNAR_INTERNAL_WRITE: " + newMessage);
-                        socket.close();
-                        return true;
-                    } catch (IOException e) {
-                        System.out.println("Socket error - could not send!");
-                    }
+                    sendToProc(message.getPlSend().getMessage(),message.getToAbstractionId(),message.getToAbstractionId(),
+                            senderHost,senderPort, process.port);
+                    return true;
                 }
-                if (message.getPlSend().getMessage().getType().equals(Message.Type.NNAR_INTERNAL_ACK)) {
-                    Socket socket = null;
+                if (message.getPlSend().getMessage().getType().equals(Message.Type.NNAR_INTERNAL_WRITE)){
                     String senderHost = message.getPlSend().getDestination().getHost();
                     int senderPort = message.getPlSend().getDestination().getPort();
-
-                    try {
-                        socket = new Socket(senderHost, senderPort);
-                        Message newMessage = Message.newBuilder()
-                                .setType(Message.Type.NETWORK_MESSAGE)
-                                .setSystemId("sys-1")
-                                .setFromAbstractionId("app.nnar[" + process.register + "].beb.pl")
-                                .setToAbstractionId("app.nnar[" + process.register + "].beb.pl")
-                                .setNetworkMessage(NetworkMessage.newBuilder()
-                                        .setSenderHost(senderHost)
-                                        .setSenderListeningPort(process.port)
-                                        .setMessage(Message.newBuilder()
-                                                .setType(Message.Type.NNAR_INTERNAL_ACK)
-                                                .setNnarInternalAck(message.getPlSend().getMessage().getNnarInternalAck())
-                                                .setFromAbstractionId("app.nnar[" + process.register + "]")
-                                                .setToAbstractionId("app.nnar[" + process.register + "]")
-                                                .setSystemId("sys-1")
-                                                .build())
-                                        .build())
-                                .build();
-                        MessageUtils.write(socket.getOutputStream(), newMessage);
-                        System.out.println("NNAR_INTERNAL_ACK: " + newMessage);
-                        socket.close();
-                        return true;
-                    } catch (IOException e) {
-                        System.out.println("Socket error - could not send!");
-                    }
+                    sendToProc(message.getPlSend().getMessage(),process.sharedMemory.appNnar+".beb.pl",
+                            process.sharedMemory.appNnar+".beb.pl", senderHost, senderPort, process.port);
+                    return true;
+                }
+                if (message.getPlSend().getMessage().getType().equals(Message.Type.NNAR_INTERNAL_ACK)){
+                    String senderHost = message.getPlSend().getDestination().getHost();
+                    int senderPort = message.getPlSend().getDestination().getPort();
+                    sendToProc(message.getPlSend().getMessage(),process.sharedMemory.appNnar+".beb.pl",
+                            process.sharedMemory.appNnar+".beb.pl", senderHost, senderPort, process.port);
+                    return true;
                 }
             case PL_DELIVER:
-                if (message.getPlDeliver().getMessage().getType().equals(Message.Type.APP_WRITE_RETURN)) {
-                    Socket socket = null;
-
-                    try {
-                        socket = new Socket(Proc.ADDR_HUB, Proc.PORT_HUB);
-                        Message newMessage = Message.newBuilder()
-                                .setType(Message.Type.NETWORK_MESSAGE)
-                                .setSystemId("sys-1")
-                                .setFromAbstractionId("app.pl")
-                                .setToAbstractionId("app.pl")
-                                .setNetworkMessage(NetworkMessage.newBuilder()
-                                        .setSenderHost(Proc.ADDR_HUB)
-                                        .setSenderListeningPort(Proc.PORT_HUB)
-                                        .setMessage(Message.newBuilder()
-                                                .setType(Message.Type.APP_WRITE_RETURN)
-                                                .setAppWriteReturn(message.getPlDeliver().getMessage().getAppWriteReturn())
-                                                .setFromAbstractionId("app")
-                                                .setToAbstractionId("hub")
-                                                .setSystemId("sys-1")
-                                                .build())
-                                        .build())
-                                .build();
-                        MessageUtils.write(socket.getOutputStream(), newMessage);
-                        System.out.println("APP_WRITE_RETURN: " + newMessage);
-                        socket.close();
-                        return true;
-                    } catch (IOException e) {
-                        System.out.println("Socket error - could not send!");
-                    }
+                if(message.getPlDeliver().getMessage().getType().equals(Message.Type.APP_WRITE_RETURN)){
+                    Message msg = Message.newBuilder()
+                            .setType(Message.Type.APP_WRITE_RETURN)
+                            .setAppWriteReturn(message.getPlDeliver().getMessage().getAppWriteReturn())
+                            .setFromAbstractionId("app")
+                            .setToAbstractionId("hub")
+                            .setSystemId("sys-1")
+                            .build();
+                    sendToHub(msg, "app.pl", "app.pl", process.port);
+                    return true;
                 }
-                if (message.getPlDeliver().getMessage().getType().equals(Message.Type.APP_READ_RETURN)) {
-                    Socket socket = null;
 
-                    try {
-                        socket = new Socket(Proc.ADDR_HUB, Proc.PORT_HUB);
-                        Message newMessage = Message.newBuilder()
-                                .setType(Message.Type.NETWORK_MESSAGE)
-                                .setSystemId("sys-1")
-                                .setFromAbstractionId("app.pl")
-                                .setToAbstractionId("app.pl")
-                                .setNetworkMessage(NetworkMessage.newBuilder()
-                                        .setSenderHost(Proc.ADDR_HUB)
-                                        .setSenderListeningPort(Proc.PORT_HUB)
-                                        .setMessage(Message.newBuilder()
-                                                .setType(Message.Type.APP_READ_RETURN)
-                                                .setAppReadReturn(message.getPlDeliver().getMessage().getAppReadReturn())
-                                                .setFromAbstractionId("app")
-                                                .setToAbstractionId("hub")
-                                                .setSystemId("sys-1")
-                                                .build())
-                                        .build())
-                                .build();
-                        MessageUtils.write(socket.getOutputStream(), newMessage);
-                        System.out.println("APP_READ_RETURN: " + newMessage);
-                        socket.close();
-                        return true;
-                    } catch (IOException e) {
-                        System.out.println("Socket error - could not send!");
-                    }
+                if(message.getPlDeliver().getMessage().getType().equals(Message.Type.APP_READ_RETURN)){
+                    Message msg = Message.newBuilder()
+                            .setType(Message.Type.APP_READ_RETURN)
+                            .setAppReadReturn(message.getPlDeliver().getMessage().getAppReadReturn())
+                            .setFromAbstractionId("app")
+                            .setToAbstractionId("hub")
+                            .setSystemId("sys-1")
+                            .build();
+                    sendToHub(msg, "app.pl", "app.pl", process.port);
+                    return true;
                 }
         }
         return false;
     }
 
-
-
-
-    // set message type from APP_BROADCAST to PL_DELIVER
-    private void plDeliver(Message message) {
-        process.messages.add(Message.newBuilder()
-                .setType(Message.Type.PL_DELIVER)
-                .setPlDeliver(PlDeliver.newBuilder()
-                        .setMessage(message)
-                        .build())
-                .setFromAbstractionId(message.getFromAbstractionId())
-                .setToAbstractionId(message.getToAbstractionId())
-                .setSystemId(message.getSystemId())
-                .build());
-    }
-
-    private void sendSocket(String senderHost, int senderListeningPort, Message message) {
-        Socket socket = null;
+    private void sendToProc(Message message, String from, String to, String host, int senderPort, int listeningPort) {
+        Socket socket;
         try {
-            socket = new Socket(senderHost, senderListeningPort);
-
-            Message nm = Message.newBuilder()
+            socket = new Socket(host, senderPort);
+            Message msg = Message.newBuilder()
                     .setType(Message.Type.NETWORK_MESSAGE)
-                    .setToAbstractionId("app.beb.pl")
-                    .setFromAbstractionId("app.beb.pl")
+                    .setFromAbstractionId(from)
+                    .setToAbstractionId(to)
                     .setSystemId("sys-1")
                     .setNetworkMessage(NetworkMessage.newBuilder()
-                            .setSenderHost(senderHost)
-                            .setSenderListeningPort(senderListeningPort)
-                            .setMessage(Message.newBuilder()
-                                    .setType(Message.Type.APP_VALUE)
-                                    .setMessageUuid(message.getMessageUuid())
-                                    .setAppValue(message.getAppValue())
-                                    .setFromAbstractionId("app.beb.pl")
-                                    .setToAbstractionId("app")
-                                    .setSystemId("sys-1")
-                                    .build())
+                            .setSenderHost(host)
+                            .setSenderListeningPort(listeningPort)
+                            .setMessage(message)
                     ).build();
-            MessageUtils.write(socket.getOutputStream(), nm);
+            MessageUtils.write(socket.getOutputStream(), msg);
             socket.close();
         } catch (IOException e) {
             System.out.println("Socket error - cannot send");
         }
     }
 
-    private void broadcastPlDeliver(Message message) {
+    //dynamic call with 'to' and 'from' abstractions for plDeliver
+    private void plDeliverParams(Message message, String from, String to, ProcessId pid) {
         process.messages.add(Message.newBuilder()
                 .setType(Message.Type.PL_DELIVER)
                 .setPlDeliver(PlDeliver.newBuilder()
-                        .setMessage(Message.newBuilder()
-                                .setType(Message.Type.APP_VALUE)
-                                .setFromAbstractionId("app.beb.pl")
-                                .setToAbstractionId("app.beb")
-                                .setAppValue(message.getAppValue()))
-                        .build())
-                .setFromAbstractionId("app.beb.pl")
-                .setToAbstractionId("app.beb")
+                        .setSender(pid)
+                        .setMessage(message).build())
+                .setFromAbstractionId(from)
+                .setToAbstractionId(to)
                 .setSystemId("sys-1")
                 .build());
     }
 
-    private void plSendToHub(Message message) {
+    private void sendToHub(Message message, String from, String to, int port) {
         Socket socket = null;
         try {
             socket = new Socket(Proc.ADDR_HUB, Proc.PORT_HUB);
-            Message newMessage = Message.newBuilder()
+            Message msg = Message.newBuilder()
                     .setType(Message.Type.NETWORK_MESSAGE)
                     .setMessageUuid(message.getMessageUuid())
-                    .setFromAbstractionId("app.pl")
-                    .setToAbstractionId("hub")
+                    .setFromAbstractionId(from)
+                    .setToAbstractionId(to)
                     .setSystemId("sys-1")
                     .setNetworkMessage(NetworkMessage.newBuilder()
                             .setSenderHost(Proc.ADDR_HUB)
-                            .setSenderListeningPort(process.port)
-                            .setMessage(Message.newBuilder()
-                                    .setType(Message.Type.APP_VALUE)
-                                    .setMessageUuid(message.getMessageUuid())
-                                    .setAppValue(message.getAppValue())
-                                    .setFromAbstractionId("app.pl")
-                                    .setToAbstractionId("hub")
-                                    .setSystemId("sys-1")
-                                    .build())
+                            .setSenderListeningPort(port)
+                            .setMessage(message)
                     ).build();
-            MessageUtils.write(socket.getOutputStream(), newMessage);
+            MessageUtils.write(socket.getOutputStream(), msg);
             socket.close();
         } catch (IOException e) {
             System.out.println("Socket error - cannot send");
         }
     }
 
+    //dynamic call with 'to' and 'from' abstractions for bebDeliver
+    public void bebDeliverParams(Message message, String from, String to, ProcessId pid) {
+        process.messages.add(Message.newBuilder()
+                .setType(Message.Type.BEB_DELIVER)
+                .setBebDeliver(BebDeliver.newBuilder()
+                        .setMessage(message)
+                        .setSender(pid)
+                        .build())
+                .setSystemId("sys-1")
+                .setFromAbstractionId(from)
+                .setToAbstractionId(to)
+                .build());
+    }
+
+    private void registerAbstraction(String register) {
+        if (process.abstractionInterfaceMap.get("app.nnar[" + register + "]") == null) {
+            process.abstractionInterfaceMap.put("app.nnar[" + register + "]", new NNAR());
+            process.abstractionInterfaceMap.get("app.nnar[" + register + "]").init(process);
+
+            process.abstractionInterfaceMap.put("app.nnar[" + register + "].pl", new PL());
+            process.abstractionInterfaceMap.get("app.nnar[" + register + "].pl").init(process);
+
+            process.abstractionInterfaceMap.put("app.nnar[" + register + "].beb", new BEB());
+            process.abstractionInterfaceMap.get("app.nnar[" + register + "].beb").init(process);
+
+            process.abstractionInterfaceMap.put("app.nnar[" + register + "].beb.pl", new PL());
+            process.abstractionInterfaceMap.get("app.nnar[" + register + "].beb.pl").init(process);
+
+            process.sharedMemory.register = register;
+            process.sharedMemory.appNnar = "app.nnar[" + register + "]";
+
+            System.out.println("Registered NNAR on " + process.debugName);
+        }
+    }
 }

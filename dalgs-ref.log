@@ -1,23 +1,58 @@
-20:17:32.320 INF hub: Listening on 127.0.0.1:5000
-20:17:32.324 INF ref-3: listening on 127.0.0.1:5003
-20:17:32.324 INF ref-1: listening on 127.0.0.1:5001
-20:17:32.324 INF ref-2: listening on 127.0.0.1:5002
-20:17:32.336 INF hub: Received registration from ref-1
-20:17:32.336 INF hub: Received registration from ref-3
-20:17:32.337 INF hub: Received registration from ref-2
-20:18:05.326 INF hub: Received registration from abc-2
-20:18:05.326 INF hub: Received registration from abc-3
-20:18:05.326 INF hub: Received registration from abc-1
-20:18:16.399 INF ref-1: Starting system sys-1 ...
-20:18:16.399 INF                                         ref-3: Starting system sys-1 ...
-20:18:16.399 INF                     ref-2: Starting system sys-1 ...
-20:18:40.617 INF hub: sys-1/ref-1 delivered 52
-20:18:40.617 INF hub: sys-1/ref-3 delivered 52
-20:18:40.617 INF hub: sys-1/ref-2 delivered 52
-20:18:40.646 INF hub: sys-1/abc-1 delivered 52
-20:18:40.646 INF hub: sys-1/abc-3 delivered 52
-20:18:40.658 INF hub: sys-1/abc-2 delivered 52
-20:23:52.388 INF ref-1: Stopping ...
-20:23:53.399 INF ref-2: Stopping ...
-20:23:54.418 INF ref-3: Stopping ...
-20:23:55.424 INF hub: Stopping ...
+19:43:42.012 INF hub: Listening on 127.0.0.1:5000
+19:43:42.014 INF ref-3: listening on 127.0.0.1:5003
+19:43:42.014 INF ref-1: listening on 127.0.0.1:5001
+19:43:42.014 INF ref-2: listening on 127.0.0.1:5002
+19:43:42.027 INF hub: Received registration from ref-3
+19:43:42.027 INF hub: Received registration from ref-1
+19:43:42.027 INF hub: Received registration from ref-2
+19:43:46.456 INF hub: Received registration from abc-1
+19:43:46.458 INF hub: Received registration from abc-2
+19:43:46.459 INF hub: Received registration from abc-3
+19:43:57.016 INF                                         ref-3: Starting system sys-1 ...
+19:43:57.016 INF ref-1: Starting system sys-1 ...
+19:43:57.017 INF                     ref-2: Starting system sys-1 ...
+19:44:15.730 INF hub: sys-1/ref-1 delivered 52
+19:44:15.733 INF hub: sys-1/ref-2 delivered 52
+19:44:15.733 INF hub: sys-1/ref-3 delivered 52
+19:44:15.760 INF hub: sys-1/abc-1 delivered 52
+19:44:15.760 INF hub: sys-1/abc-3 delivered 52
+19:44:15.760 INF hub: sys-1/abc-2 delivered 52
+19:44:20.557 INF hub: sys-1/ref-3 delivered 52
+19:44:20.582 INF hub: sys-1/ref-2 delivered 52
+19:44:20.582 INF hub: sys-1/ref-1 delivered 52
+19:44:20.630 INF hub: sys-1/abc-2 delivered 52
+19:44:20.685 INF hub: sys-1/abc-1 delivered 52
+19:44:20.711 INF hub: sys-1/abc-3 delivered 52
+19:44:35.071 INF hub: sys-1/abc-2 finished writing x
+19:44:48.665 INF hub: sys-1/abc-3 read x=69
+19:44:48.668 INF hub: sys-1/abc-1 read x=69
+19:44:48.708 INF hub: sys-1/abc-2 read x=69
+19:45:12.379 INF hub: sys-1/abc-2 read y=-1
+19:45:12.425 INF hub: sys-1/abc-1 read y=-1
+19:45:12.461 INF hub: sys-1/abc-3 read y=-1
+19:45:18.747 INF hub: sys-1/abc-2 read y=-1
+19:45:18.747 INF hub: sys-1/abc-3 read y=-1
+19:45:18.762 INF hub: sys-1/abc-1 read y=-1
+19:45:26.981 INF hub: sys-1/abc-2 finished writing y
+19:45:44.732 INF hub: sys-1/abc-3 read y=69
+19:45:44.749 INF hub: sys-1/abc-2 read y=69
+19:45:44.781 INF hub: sys-1/abc-1 read y=69
+19:46:12.272 INF hub: sys-1/abc-3 finished writing w
+19:46:12.275 INF hub: sys-1/abc-2 finished writing w
+19:46:12.275 INF hub: sys-1/abc-1 finished writing w
+19:46:12.588 INF hub: sys-1/abc-3 read w=21
+19:46:12.589 INF hub: sys-1/abc-2 finished writing w
+19:46:12.612 INF hub: sys-1/abc-1 read w=21
+19:46:12.937 INF hub: sys-1/abc-2 read w=53
+19:46:12.939 INF hub: sys-1/abc-3 finished writing w
+19:46:12.961 INF hub: sys-1/abc-1 finished writing w
+19:46:13.252 INF hub: sys-1/abc-2 read w=23
+19:46:13.252 INF hub: sys-1/abc-3 read w=23
+19:46:13.253 INF hub: sys-1/abc-1 read w=23
+19:46:16.275 INF hub: sys-1/abc-2 read w=23
+19:46:16.278 INF hub: sys-1/abc-1 read w=23
+19:46:16.329 INF hub: sys-1/abc-3 read w=23
+19:46:28.054 INF ref-1: Stopping ...
+19:46:29.063 INF ref-2: Stopping ...
+19:46:30.072 INF ref-3: Stopping ...
+19:46:31.088 INF hub: Stopping ...
