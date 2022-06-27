@@ -100,6 +100,22 @@ public class PL implements AbstractionInterface {
                     process.messages.add(msg);
                     return true;
                 }
+                if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.EC_INTERNAL_NEW_EPOCH)){
+                    System.out.println("Internal epoch yey");
+                    int portSender = message.getNetworkMessage().getSenderListeningPort();
+                    ProcessId senderPID = process.getProcByPort(portSender);
+                    bebDeliverParams(message.getNetworkMessage().getMessage(),"app.beb.pl",
+                            "ec", senderPID);
+                    return true;
+                }
+                if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.EP_INTERNAL_READ)){
+
+                    int portSender = message.getNetworkMessage().getSenderListeningPort();
+                    ProcessId senderPID = process.getProcByPort(portSender);
+                    bebDeliverParams(message.getNetworkMessage().getMessage(),message.getToAbstractionId(),
+                            message.getToAbstractionId()+".ec", senderPID);
+                    return true;
+                }
 
             case PL_SEND:
                 if (message.getToAbstractionId().equals("app.pl")) {

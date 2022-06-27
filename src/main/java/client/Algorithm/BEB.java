@@ -48,7 +48,10 @@ public class BEB implements AbstractionInterface {
                                 message.getBebBroadcast().getMessage().getToAbstractionId() + ".pl", pid);
                     }
                     return true;
-
+                }
+                else{
+                    this.beb_broadcast_cons(message.getBebBroadcast().getMessage());
+                    return true;
                 }
 
             case PL_DELIVER:
@@ -65,6 +68,10 @@ public class BEB implements AbstractionInterface {
                 }
                 if (message.getPlDeliver().getMessage().getType().equals(Message.Type.NNAR_INTERNAL_READ)){
                     bebDeliverParams(message.getPlDeliver().getMessage(), message.getToAbstractionId(), process.sharedMemory.appNnar, message.getPlDeliver().getSender());
+                    return true;
+                }
+                else {
+                    this.pl_deliver_cons(message.getPlDeliver().getSender(), message.getPlDeliver().getMessage());
                     return true;
                 }
 
@@ -118,6 +125,32 @@ public class BEB implements AbstractionInterface {
                 .setSystemId("sys-1")
                 .setFromAbstractionId(from)
                 .setToAbstractionId(to)
+                .build());
+    }
+
+    public void beb_broadcast_cons(Message m) {
+        for(ProcessId pid : process.processes) {
+            process.messages.add(Message.newBuilder()
+                    .setType(Message.Type.PL_SEND)
+                    .setSystemId("sys-1")
+                    .setToAbstractionId("beb")
+                    .setPlSend(PlSend.newBuilder()
+                            .setDestination(pid)
+                            .setMessage(m)
+                            .build())
+                    .build());
+        }
+    }
+
+    public void pl_deliver_cons(ProcessId p, Message m) {
+        process.messages.add(Message.newBuilder()
+                .setType(Message.Type.BEB_DELIVER)
+                .setSystemId("sys-1")
+                .setToAbstractionId(m.getToAbstractionId())
+                .setBebDeliver(BebDeliver.newBuilder()
+                        .setSender(p)
+                        .setMessage(m)
+                        .build())
                 .build());
     }
 }

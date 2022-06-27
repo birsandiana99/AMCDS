@@ -1,7 +1,7 @@
 package client.Infrastructure;
 
 import client.Algorithm.AbstractionInterface;
-import client.Utilities.SharedMemory;
+import client.Utilities.*;
 import main.CommunicationProtocol.*;
 
 import java.io.IOException;
@@ -33,6 +33,18 @@ public class Proc {
     public List<Message> messages = new ArrayList<>();
 
     public SharedMemory sharedMemory;
+
+
+    //UC = leader
+    public ProcessId leader;
+    public UCState ucState;
+    public EPState epState;
+    public ECState ecState;
+    public ELDState eldState;
+    public EPFDState epfdState;
+
+    public String ucTopic;
+
 
     public Proc(int p, int i, int rp) throws UnknownHostException, IOException {
         socketHub = new Socket(ADDR_HUB, PORT_HUB);

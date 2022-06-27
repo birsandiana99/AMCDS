@@ -1,27 +1,13 @@
-19:51:28.149 INF hub: Listening on 127.0.0.1:5000
-19:51:28.151 INF ref-1: listening on 127.0.0.1:5001
-19:51:28.151 INF ref-3: listening on 127.0.0.1:5003
-19:51:28.154 INF ref-2: listening on 127.0.0.1:5002
-19:51:28.163 INF hub: Received registration from ref-1
-19:51:28.163 INF hub: Received registration from ref-3
-19:51:28.163 INF hub: Received registration from ref-2
-19:51:36.382 INF hub: Received registration from abc-1
-19:51:36.413 INF hub: Received registration from abc-2
-19:51:36.415 INF hub: Received registration from abc-3
-19:51:42.898 INF ref-1: Starting system sys-1 ...
-19:51:42.898 INF                                         ref-3: Starting system sys-1 ...
-19:51:42.899 INF                     ref-2: Starting system sys-1 ...
-19:51:48.762 INF hub: sys-1/ref-1 delivered 52
-19:51:48.782 INF hub: sys-1/ref-2 delivered 52
-19:51:48.783 INF hub: sys-1/ref-3 delivered 52
-19:51:48.861 INF hub: sys-1/abc-3 delivered 52
-19:51:48.864 INF hub: sys-1/abc-2 delivered 52
-19:51:48.864 INF hub: sys-1/abc-1 delivered 52
-19:52:02.629 INF hub: sys-1/abc-2 finished writing x
-19:52:05.823 INF hub: sys-1/abc-3 read x=666
-19:52:05.840 INF hub: sys-1/abc-2 read x=666
-19:52:05.843 INF hub: sys-1/abc-1 read x=666
-19:52:35.485 INF ref-1: Stopping ...
-19:52:36.496 INF ref-2: Stopping ...
-19:52:37.510 INF ref-3: Stopping ...
-19:52:38.513 INF hub: Stopping ...
+21:04:13.821 INF hub: Listening on 127.0.0.1:5000
+21:04:13.824 INF ref-1: listening on 127.0.0.1:5001
+21:04:13.824 INF ref-3: listening on 127.0.0.1:5003
+21:04:13.824 INF ref-2: listening on 127.0.0.1:5002
+21:04:13.831 INF hub: Received registration from ref-3
+21:04:13.831 INF hub: Received registration from ref-2
+21:04:13.831 INF hub: Received registration from ref-1
+21:04:18.991 INF hub: Received registration from abc-1
+21:04:18.991 INF hub: Received registration from abc-2
+21:04:18.992 INF hub: Received registration from abc-3
+21:04:29.013 INF ref-1: Starting system sys-1 ...
+21:04:29.013 INF                     ref-2: Starting system sys-1 ...
+21:04:29.013 INF                                         ref-3: Starting system sys-1 ...
