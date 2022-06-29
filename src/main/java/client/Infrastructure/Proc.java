@@ -70,4 +70,16 @@ public class Proc {
         processes = procs;
         pid = getProcByPort(port);
     }
+
+    public ProcessId getLeader() {
+        int maxRank = 0;
+        ProcessId leader = processes.get(0);
+        for (ProcessId pid: processes) {
+            if (pid.getRank() > maxRank) {
+                maxRank = pid.getRank();
+                leader = pid;
+            }
+        }
+        return leader;
+    }
 }

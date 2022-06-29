@@ -178,6 +178,11 @@ public class PL implements AbstractionInterface {
                             process.sharedMemory.appNnar+".beb.pl", senderHost, senderPort, process.port);
                     return true;
                 }
+                else {
+                    plSendParams(message.getToAbstractionId(), message.getPlSend().getDestination().getHost(),
+                            message.getPlSend().getDestination().getPort(), message.getPlSend().getMessage());
+                    return true;
+                }
             case PL_DELIVER:
                 if(message.getPlDeliver().getMessage().getType().equals(Message.Type.APP_WRITE_RETURN)){
                     Message msg = Message.newBuilder()
@@ -204,6 +209,28 @@ public class PL implements AbstractionInterface {
                 }
         }
         return false;
+    }
+
+    private void plSendParams(String toAbstractionId, String hostSender, int listeningPortSender, Message message) {
+        Socket socket = null;
+        try {
+            socket = new Socket(hostSender, listeningPortSender);
+            NetworkMessage networkMessage = NetworkMessage.newBuilder()
+                    .setSenderHost(Proc.ADDR_HUB)
+                    .setSenderListeningPort(process.port)
+                    .setMessage(message).build();
+
+            MessageUtils.write(socket.getOutputStream(), Message.newBuilder()
+                    .setType(Message.Type.NETWORK_MESSAGE)
+                    .setToAbstractionId(toAbstractionId)
+                    .setSystemId("sys-1")
+                    .setNetworkMessage(networkMessage)
+                    .build());
+
+            socket.close();
+        } catch (IOException e) {
+            System.out.println("Consensus socket send error " + e.toString());
+        }
     }
 
     private void sendToProc(Message message, String from, String to, String host, int senderPort, int listeningPort) {

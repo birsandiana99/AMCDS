@@ -30,7 +30,6 @@ public class UC implements AbstractionInterface{
     }
 
     public void proposeValue() {
-        System.out.println("aici in pula mea11111111111111111111111111111");
         if(process.leader.equals(ProcUtil.getCurrentProcess(process)) && process.ucState.val.getDefined() && !process.ucState.proposed) {
             process.ucState.proposed = true;
             process.messages.add(Message.newBuilder().setType(Message.Type.EP_PROPOSE)

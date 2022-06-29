@@ -8,12 +8,12 @@ import java.util.Timer;
 
 public class ELDState {
     public List<ProcessId> suspected;
-    public ProcessId leader;
+//    public ProcessId leader;
     public Timer timer;
 
     public ELDState(){
         timer = new Timer();
         suspected = new ArrayList<>();
-        leader = null;
+//        leader = null;
     }
 }

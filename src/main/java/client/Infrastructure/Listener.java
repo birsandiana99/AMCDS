@@ -156,8 +156,8 @@ public class Listener extends Thread {
                     if(process.abstractionInterfaceMap.get(message.getToAbstractionId()) == null){
                         if(message.getToAbstractionId().contains("ep")){
                             EpInternalState state = message.getNetworkMessage().getMessage().getEpInternalState();
-                            process.abstractionInterfaceMap.put(message.getNetworkMessage().getMessage().getToAbstractionId(), new EP(process, state, process.epState.ets, process.epState.leader));
-//                            process.abstractionInterfaceMap.put(message.getNetworkMessage().getMessage().getToAbstractionId(), new EP(process, state, process.epState.ets, process.leader));
+//                            process.abstractionInterfaceMap.put(message.getNetworkMessage().getMessage().getToAbstractionId(), new EP(process, state, process.epState.ets, process.epState.leader));
+                            process.abstractionInterfaceMap.put(message.getNetworkMessage().getMessage().getToAbstractionId(), new EP(process, state, process.epState.ets, process.leader));
                         }
                     }
                     System.out.println("NETWORK: internal read\n");
@@ -176,8 +176,8 @@ public class Listener extends Thread {
                     if(process.abstractionInterfaceMap.get(message.getToAbstractionId()) == null){
                         if(message.getToAbstractionId().contains("ep")){
                             EpInternalState state = message.getNetworkMessage().getMessage().getEpInternalState();
-                            process.abstractionInterfaceMap.put(message.getNetworkMessage().getMessage().getToAbstractionId(), new EP(process, state, process.epState.ets, process.epState.leader));
-//                            process.abstractionInterfaceMap.put(message.getNetworkMessage().getMessage().getToAbstractionId(), new EP(process, state, process.epState.ets, process.leader));
+//                            process.abstractionInterfaceMap.put(message.getNetworkMessage().getMessage().getToAbstractionId(), new EP(process, state, process.epState.ets, process.epState.leader));
+                            process.abstractionInterfaceMap.put(message.getNetworkMessage().getMessage().getToAbstractionId(), new EP(process, state, process.epState.ets, process.leader));
                         }
                     }
                     System.out.println("NETWORK: internal write\n");
@@ -196,8 +196,8 @@ public class Listener extends Thread {
                     if(process.abstractionInterfaceMap.get(message.getToAbstractionId()) == null){
                         if(message.getToAbstractionId().contains("ep")){
                             EpInternalState state = message.getNetworkMessage().getMessage().getEpInternalState();
-                            process.abstractionInterfaceMap.put(message.getNetworkMessage().getMessage().getToAbstractionId(), new EP(process, state, process.epState.ets, process.epState.leader));
-//                            process.abstractionInterfaceMap.put(message.getNetworkMessage().getMessage().getToAbstractionId(), new EP(process, state, process.epState.ets, process.leader));
+//                            process.abstractionInterfaceMap.put(message.getNetworkMessage().getMessage().getToAbstractionId(), new EP(process, state, process.epState.ets, process.epState.leader));
+                            process.abstractionInterfaceMap.put(message.getNetworkMessage().getMessage().getToAbstractionId(), new EP(process, state, process.epState.ets, process.leader));
                         }
                     }
                     System.out.println("NETWORK: internal decided\n");
@@ -215,8 +215,8 @@ public class Listener extends Thread {
                     if(process.abstractionInterfaceMap.get(message.getToAbstractionId()) == null){
                         if(message.getToAbstractionId().contains("ep")){
                             EpInternalState state = message.getNetworkMessage().getMessage().getEpInternalState();
-                            process.abstractionInterfaceMap.put(message.getToAbstractionId(), new EP(process, state, process.epState.ets, process.epState.leader));
-//                            process.abstractionInterfaceMap.put(message.getToAbstractionId(), new EP(process, state, process.epState.ets, process.leader));
+//                            process.abstractionInterfaceMap.put(message.getToAbstractionId(), new EP(process, state, process.epState.ets, process.epState.leader));
+                            process.abstractionInterfaceMap.put(message.getToAbstractionId(), new EP(process, state, process.epState.ets, process.leader));
                         }
                     }
 

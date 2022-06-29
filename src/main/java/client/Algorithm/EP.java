@@ -122,7 +122,6 @@ public class EP implements AbstractionInterface{
 
             case PL_DELIVER:
                 PlDeliver msg = message.getPlDeliver();
-                System.out.println("PL DELIVER EP!!!!!!!!!!::: " + Character.isDigit((msg.getMessage().getToAbstractionId().charAt(2))));
 
                 if(msg.getMessage().getToAbstractionId().contains("ep") && Character.isDigit((msg.getMessage().getToAbstractionId().charAt(2)))) {
                     ts = Integer.parseInt(msg.getMessage().getToAbstractionId().substring(2));
@@ -189,7 +188,6 @@ public class EP implements AbstractionInterface{
                 process.epState.tmpval = Value.newBuilder().setDefined(true).setV(st.getValue().getV()).build();
             }
             process.epState.states = new HashMap<>();
-            System.out.println("internal write aici-----------");
             Message msg = Message.newBuilder()
                     .setToAbstractionId(process.ucTopic+".ep["+process.epState.ets+"]")
                     .setType(Message.Type.EP_INTERNAL_WRITE)
