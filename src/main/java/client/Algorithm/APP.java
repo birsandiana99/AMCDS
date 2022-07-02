@@ -8,8 +8,8 @@ public class APP  implements AbstractionInterface{
 
 
     @Override
-    public void init(Proc p) {
-        process = p;
+    public void init(Proc process) {
+        this.process = process;
     }
 
     @Override
@@ -17,7 +17,7 @@ public class APP  implements AbstractionInterface{
         switch (message.getType()) {
             case PL_DELIVER:
                 if (message.getPlDeliver().getMessage().getType().equals(Message.Type.APP_BROADCAST)) {
-                    Message msg = Message.newBuilder()
+                    Message appValue = Message.newBuilder()
                             .setType(Message.Type.APP_VALUE)
                             .setFromAbstractionId("app")
                             .setToAbstractionId("app.beb")
@@ -26,12 +26,12 @@ public class APP  implements AbstractionInterface{
                                     .setValue(message.getPlDeliver().getMessage().getAppBroadcast().getValue())
                                     .build())
                             .build();
-                    bebBroadcastParams(msg, "app", "app.beb");
+                    this.bebBroadcastParams(appValue, "app", "app.beb");
                     return true;
                 }
 
             case BEB_DELIVER:
-                Message msg = Message.newBuilder()
+                Message appValue = Message.newBuilder()
                         .setType(Message.Type.APP_VALUE)
                         .setFromAbstractionId("app")
                         .setToAbstractionId("app.pl")
@@ -39,7 +39,7 @@ public class APP  implements AbstractionInterface{
                         .setAppValue(message.getBebDeliver().getMessage().getAppValue())
                         .build();
 
-                plSendParams(msg, "app", "app.pl");
+                this.plSendParams(appValue, "app", "app.pl");
                 return true;
         }
         return false;
@@ -47,7 +47,7 @@ public class APP  implements AbstractionInterface{
 
 
     private void bebBroadcastParams(Message message, String from, String to) {
-        process.messages.add(Message.newBuilder()
+        this.process.messages.add(Message.newBuilder()
                 .setType(Message.Type.BEB_BROADCAST)
                 .setBebBroadcast(BebBroadcast.newBuilder()
                         .setMessage(message)
@@ -59,7 +59,7 @@ public class APP  implements AbstractionInterface{
     }
 
     private void plSendParams(Message message, String from, String to) {
-        process.messages.add(Message.newBuilder()
+        this.process.messages.add(Message.newBuilder()
                 .setType(Message.Type.PL_SEND)
                 .setPlSend(PlSend.newBuilder()
                         .setMessage(message)

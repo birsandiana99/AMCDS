@@ -1,7 +1,6 @@
 package client.Algorithm;
 
 import client.Infrastructure.Proc;
-import client.Infrastructure.Proc;
 import main.CommunicationProtocol.*;
 import client.Utilities.EPState;
 import client.Utilities.ProcUtil;
@@ -13,18 +12,18 @@ public class EP implements AbstractionInterface{
     private Proc process;
 
     @Override
-    public void init(Proc p) { }
+    public void init(Proc process) { }
 
-    public EP(Proc p, EpInternalState state, int ets, ProcessId l) {
-        process = p;
-        process.epState = new EPState(state, ets, l);
+    public EP(Proc process, EpInternalState state, int ets, ProcessId l) {
+        this.process = process;
+        this.process.epState = new EPState(state, ets, l);
     }
 
     private Integer getEpFromString(String toAbstractionId){
-        String arr[] = toAbstractionId.split("\\.");
+        String[] arr = toAbstractionId.split("\\.");
         String res = "-1";
-        for(String s: arr){
-            if(s.contains("ep")){
+        for (String s: arr){
+            if (s.contains("ep")){
                 res = s;
                 res = res.substring(3, res.length() - 1);
             }
@@ -39,80 +38,82 @@ public class EP implements AbstractionInterface{
 
     @Override
     public boolean handle(Message message) {
-        if(process.epState.halted) {
+        if (this.process.epState.halted) {
             return false;
         }
 
-        int ts = -1;
-        if(message.getToAbstractionId().contains("ep")) {
-            ts = getEpFromString(message.getToAbstractionId());
+        int timestamp = -1;
+        if (message.getToAbstractionId().contains("ep")) {
+            timestamp = getEpFromString(message.getToAbstractionId());
         }
 
         switch (message.getType()) {
             case EP_PROPOSE:
                 System.out.println("EP Propose: EP\n");
-                if(ts == process.epState.ets) {
-                    if(ProcUtil.getCurrentProcess(process).equals(process.leader)) {
-                        process.epState.tmpval = Value.newBuilder().setDefined(true).setV(message.getEpPropose().getValue().getV()).build();
-                        Message msg = Message.newBuilder()
+                if(timestamp == this.process.epState.ets) {
+                    if (ProcUtil.getCurrentProcess(this.process).equals(this.process.leader)) {
+                        this.process.epState.tmpval = Value.newBuilder().setDefined(true).setV(message.getEpPropose().getValue().getV()).build();
+                        Message epInternalRead = Message.newBuilder()
                                 .setType(Message.Type.EP_INTERNAL_READ)
                                 .setEpInternalRead(EpInternalRead.newBuilder().build())
-                                .setToAbstractionId(process.ucTopic+".ep["+process.epState.ets+"]")
+                                .setToAbstractionId(this.process.ucTopic + ".ep[" + this.process.epState.ets + "]")
                                 .build();
-                        bebBroadcast(msg, process.ucTopic+".ep["+process.epState.ets+"]", process.ucTopic+".ec"+".beb");
+                        this.bebBroadcastParams(epInternalRead, this.process.ucTopic + ".ep[" + this.process.epState.ets + "]", this.process.ucTopic + ".ec.beb");
                     }
                     return true;
                 }
             case BEB_DELIVER:
-                BebDeliver m = message.getBebDeliver();
-                if(m.getMessage().getToAbstractionId().contains("ep") && Character.isDigit((m.getMessage().getToAbstractionId().charAt(2)))) {
-                    ts = Integer.parseInt(m.getMessage().getToAbstractionId().substring(2));
+                BebDeliver bebDeliver = message.getBebDeliver();
+                if (bebDeliver.getMessage().getToAbstractionId().contains("ep") && Character.isDigit((bebDeliver.getMessage().getToAbstractionId().charAt(2)))) {
+                    timestamp = Integer.parseInt(bebDeliver.getMessage().getToAbstractionId().substring(2));
                 }
-                switch(m.getMessage().getType()) {
+                switch (bebDeliver.getMessage().getType()) {
                     case EP_INTERNAL_READ:
-                        if(ts == process.epState.ets) {
+                        if (timestamp == process.epState.ets) {
                             System.out.println("internal read - EP");
-                            Message msg = Message.newBuilder()
+                            Message epInternalState = Message.newBuilder()
                                     .setType(Message.Type.EP_INTERNAL_STATE)
-                                    .setToAbstractionId(process.ucTopic+".ep["+process.epState.ets+"]")
+                                    .setToAbstractionId(this.process.ucTopic + ".ep[" + this.process.epState.ets + "]")
                                     .setEpInternalState(EpInternalState.newBuilder()
-                                            .setValueTimestamp(process.epState.st.getValueTimestamp())
-                                            .setValue(Value.newBuilder().setDefined(true).setV(process.epState.st.getValue().getV())
+                                            .setValueTimestamp(this.process.epState.st.getValueTimestamp())
+                                            .setValue(Value.newBuilder().setDefined(true).setV(this.process.epState.st.getValue().getV())
                                                     .build()))
                                     .build();
 
-                            plSend(msg, process.ucTopic+".ep["+process.epState.ets+"]", process.ucTopic+".ep["+process.epState.ets+"].pl", m.getSender());
+                            this.plSendParams(epInternalState, this.process.ucTopic + ".ep[" + this.process.epState.ets + "]",
+                                    this.process.ucTopic + ".ep[" + this.process.epState.ets + "].pl", bebDeliver.getSender());
                             return true;
                         }
                     case EP_INTERNAL_WRITE:
-                        if(ts == process.epState.ets) {
+                        if (timestamp == this.process.epState.ets) {
                             System.out.println("internal write - EP");
-                            process.epState.st = EpInternalState.newBuilder()
-                                    .setValueTimestamp(process.epState.ets)
+                            this.process.epState.st = EpInternalState.newBuilder()
+                                    .setValueTimestamp(this.process.epState.ets)
                                     .setValue(Value.newBuilder()
                                             .setDefined(true)
-                                            .setV(m.getMessage().getEpInternalWrite().getValue().getV())
+                                            .setV(bebDeliver.getMessage().getEpInternalWrite().getValue().getV())
                                             .build())
                                     .build();
-                            Message msg = Message.newBuilder()
+                            Message epInternalAccept = Message.newBuilder()
                                     .setSystemId("sys-1")
-                                    .setFromAbstractionId(process.ucTopic+".ep["+process.epState.ets+"]")
-                                    .setToAbstractionId(process.ucTopic+".ep["+process.epState.ets+"]")
+                                    .setFromAbstractionId(this.process.ucTopic + ".ep[" + this.process.epState.ets + "]")
+                                    .setToAbstractionId(this.process.ucTopic + ".ep[" + this.process.epState.ets + "]")
                                     .setType(Message.Type.EP_INTERNAL_ACCEPT)
                                     .build();
 
-                            plSend(msg, process.ucTopic+".ep["+process.epState.ets+"]", process.ucTopic+".ep["+process.epState.ets+"].pl", m.getSender());
+                            this.plSendParams(epInternalAccept, this.process.ucTopic + ".ep[" + this.process.epState.ets + "]",
+                                    this.process.ucTopic + ".ep[" + this.process.epState.ets + "].pl", bebDeliver.getSender());
                             return true;
                         }
                     case EP_INTERNAL_DECIDED:
-                        if(ts == process.epState.ets) {
-                            System.out.println(process.debugName+" internal decide - EP");
-                            process.messages.add(Message.newBuilder().setType(Message.Type.EP_DECIDE)
-                                    .setToAbstractionId(process.ucTopic)
-                                    .setEpDecide(EpDecide.newBuilder().setEts(process.epState.ets)
+                        if (timestamp == process.epState.ets) {
+                            System.out.println(this.process.debugName + " internal decide - EP");
+                            this.process.messages.add(Message.newBuilder().setType(Message.Type.EP_DECIDE)
+                                    .setToAbstractionId(this.process.ucTopic)
+                                    .setEpDecide(EpDecide.newBuilder().setEts(this.process.epState.ets)
                                             .setValue(Value.newBuilder()
                                                     .setDefined(true)
-                                                    .setV(m.getMessage().getEpInternalDecided().getValue().getV())
+                                                    .setV(bebDeliver.getMessage().getEpInternalDecided().getValue().getV())
                                                     .build()).build())
                                     .build());
                             return true;
@@ -121,43 +122,43 @@ public class EP implements AbstractionInterface{
                 return false;
 
             case PL_DELIVER:
-                PlDeliver msg = message.getPlDeliver();
+                PlDeliver plDeliver = message.getPlDeliver();
 
-                if(msg.getMessage().getToAbstractionId().contains("ep") && Character.isDigit((msg.getMessage().getToAbstractionId().charAt(2)))) {
-                    ts = Integer.parseInt(msg.getMessage().getToAbstractionId().substring(2));
+                if (plDeliver.getMessage().getToAbstractionId().contains("ep") && Character.isDigit((plDeliver.getMessage().getToAbstractionId().charAt(2)))) {
+                    timestamp = Integer.parseInt(plDeliver.getMessage().getToAbstractionId().substring(2));
                 }
-                switch(msg.getMessage().getType()) {
+                switch (plDeliver.getMessage().getType()) {
                     case EP_INTERNAL_STATE:
-                        if(ts == process.epState.ets) {
-                            if(ProcUtil.getCurrentProcess(process).equals(process.leader)) {
-                                EpInternalState state = EpInternalState.newBuilder()
-                                        .setValueTimestamp(msg.getMessage().getEpInternalState().getValueTimestamp())
+                        if (timestamp == this.process.epState.ets) {
+                            if (ProcUtil.getCurrentProcess(this.process).equals(this.process.leader)) {
+                                EpInternalState epInternalState = EpInternalState.newBuilder()
+                                        .setValueTimestamp(plDeliver.getMessage().getEpInternalState().getValueTimestamp())
                                         .setValue(Value.newBuilder()
                                                 .setDefined(true)
-                                                .setV(msg.getMessage().getEpInternalState().getValue().getV())
+                                                .setV(plDeliver.getMessage().getEpInternalState().getValue().getV())
                                                 .build())
                                         .build();
-                                process.epState.states.put(msg.getSender().getPort(), state);
-                                checkStates();
+                                this.process.epState.states.put(plDeliver.getSender().getPort(), epInternalState);
+                                this.checkStates();
                             }
                             return true;
                         }
                     case EP_INTERNAL_ACCEPT:
-                        if(ts == process.epState.ets) {
-                            if(ProcUtil.getCurrentProcess(process).equals(process.leader)) {
-                                process.epState.accepted++;
-                                if(process.epState.accepted > Math.ceil(process.processes.size()/2)) {
-                                    process.epState.accepted = 0;
-                                    Message msg1 = Message.newBuilder()
-                                            .setToAbstractionId(process.ucTopic+".ep["+process.epState.ets+"]")
+                        if (timestamp == this.process.epState.ets) {
+                            if (ProcUtil.getCurrentProcess(this.process).equals(this.process.leader)) {
+                                this.process.epState.accepted++;
+                                if (this.process.epState.accepted > Math.ceil(this.process.processes.size() / 2)) {
+                                    this.process.epState.accepted = 0;
+                                    Message epInternalDecided = Message.newBuilder()
+                                            .setToAbstractionId(this.process.ucTopic + ".ep[" + this.process.epState.ets + "]")
                                             .setType(Message.Type.EP_INTERNAL_DECIDED)
                                             .setEpInternalDecided(EpInternalDecided.newBuilder()
                                                     .setValue(Value.newBuilder()
                                                             .setDefined(true)
-                                                            .setV(process.epState.tmpval.getV())
+                                                            .setV(this.process.epState.tmpval.getV())
                                                             .build()))
                                             .build();
-                                    bebBroadcast(msg1, process.ucTopic+".ep["+process.epState.ets+"]", process.ucTopic+".ec"+".beb");
+                                    this.bebBroadcastParams(epInternalDecided, this.process.ucTopic + ".ep[" + this.process.epState.ets + "]", this.process.ucTopic + ".ec.beb");
                                 }
                             }
                             return true;
@@ -166,15 +167,15 @@ public class EP implements AbstractionInterface{
                 return false;
 
             case EP_ABORT:
-                if(ts == process.epState.ets) {
+                if (timestamp == this.process.epState.ets) {
                     System.out.println("EP abort: EP\n");
-                    process.messages.add(Message.newBuilder().setType(Message.Type.EP_ABORTED)
-                            .setToAbstractionId(process.ucTopic)
-                            .setEpAborted(EpAborted.newBuilder().setEts(process.epState.ets)
-                                    .setValue(Value.newBuilder().setDefined(true).setV(process.epState.st.getValue().getV()).build())
-                                    .setValueTimestamp(process.epState.st.getValueTimestamp()).build())
+                    this.process.messages.add(Message.newBuilder().setType(Message.Type.EP_ABORTED)
+                            .setToAbstractionId(this.process.ucTopic)
+                            .setEpAborted(EpAborted.newBuilder().setEts(this.process.epState.ets)
+                                    .setValue(Value.newBuilder().setDefined(true).setV(this.process.epState.st.getValue().getV()).build())
+                                    .setValueTimestamp(this.process.epState.st.getValueTimestamp()).build())
                             .build());
-                    process.epState.halted = true;
+                    this.process.epState.halted = true;
                     return true;
                 }
         }
@@ -182,14 +183,14 @@ public class EP implements AbstractionInterface{
     }
 
     public void checkStates() {
-        if(process.epState.states.size() > Math.ceil(process.processes.size()/2)) {
-            EpInternalState st = highest();
+        if (this.process.epState.states.size() > Math.ceil(this.process.processes.size() / 2)) {
+            EpInternalState st = getHighest();
             if(st.getValue().getDefined()) {
-                process.epState.tmpval = Value.newBuilder().setDefined(true).setV(st.getValue().getV()).build();
+                this.process.epState.tmpval = Value.newBuilder().setDefined(true).setV(st.getValue().getV()).build();
             }
-            process.epState.states = new HashMap<>();
-            Message msg = Message.newBuilder()
-                    .setToAbstractionId(process.ucTopic+".ep["+process.epState.ets+"]")
+            this.process.epState.states = new HashMap<>();
+            Message epInternalWrite = Message.newBuilder()
+                    .setToAbstractionId(this.process.ucTopic + ".ep[" + this.process.epState.ets+"]")
                     .setType(Message.Type.EP_INTERNAL_WRITE)
                     .setEpInternalWrite(EpInternalWrite.newBuilder()
                             .setValue(Value.newBuilder()
@@ -197,37 +198,37 @@ public class EP implements AbstractionInterface{
                                     .setV(process.epState.tmpval.getV())
                                     .build()))
                         .build();
-            bebBroadcast(msg, process.ucTopic+".ep["+process.epState.ets+"]", process.ucTopic+".ec"+".beb");
+            this.bebBroadcastParams(epInternalWrite, this.process.ucTopic + ".ep[" + this.process.epState.ets + "]", this.process.ucTopic + ".ec.beb");
         }
     }
 
-    public EpInternalState highest() {
-        EpInternalState state = EpInternalState.newBuilder().setValueTimestamp(0).setValue(Value.newBuilder().setDefined(false).build()).build();
-        for(Integer port : process.epState.states.keySet()) {
-            if(process.epState.states.get(port).getValueTimestamp() > state.getValueTimestamp()) {
-                state = process.epState.states.get(port);
+    public EpInternalState getHighest() {
+        EpInternalState epInternalState = EpInternalState.newBuilder().setValueTimestamp(0).setValue(Value.newBuilder().setDefined(false).build()).build();
+        for (Integer port : this.process.epState.states.keySet()) {
+            if (this.process.epState.states.get(port).getValueTimestamp() > epInternalState.getValueTimestamp()) {
+                epInternalState = this.process.epState.states.get(port);
             }
         }
-        return state;
+        return epInternalState;
     }
 
-    private void bebBroadcast(Message m, String from, String to) {
-        Message msg = Message.newBuilder()
+    private void bebBroadcastParams(Message message, String from, String to) {
+        Message bebBroadcast = Message.newBuilder()
                 .setType(Message.Type.BEB_BROADCAST)
                 .setBebBroadcast(BebBroadcast.newBuilder()
-                        .setMessage(m)
+                        .setMessage(message)
                         .build())
                 .setFromAbstractionId(from)
                 .setToAbstractionId(to)
                 .build();
-        process.messages.add(msg);
+        this.process.messages.add(bebBroadcast);
     }
 
-    public void plSend(Message m, String from, String to, ProcessId pid) {
-        process.messages.add(Message.newBuilder()
+    public void plSendParams(Message message, String from, String to, ProcessId pid) {
+        this.process.messages.add(Message.newBuilder()
                 .setType(Message.Type.PL_SEND)
                 .setPlSend(PlSend.newBuilder()
-                        .setMessage(m)
+                        .setMessage(message)
                         .setDestination(pid)
                         .build())
                 .setSystemId("sys-1")

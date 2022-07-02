@@ -16,26 +16,34 @@ public class UC implements AbstractionInterface{
     private Proc process;
 
     @Override
-    public void init(Proc p) {
-        process = p;
-        process.ucState = new UCState();
-        process.leader = ProcUtil.maxRank(process.processes);
+    public void init(Proc process) {
+        this.process = process;
+        this.process.ucState = new UCState();
+        this.process.leader = ProcUtil.maxRank(this.process.processes);
 
-        EpInternalState state = EpInternalState.newBuilder().setValueTimestamp(0).setValue(Value.newBuilder().setDefined(false).build()).build();
+        EpInternalState state = EpInternalState.newBuilder()
+                .setValueTimestamp(0).setValue(
+                        Value.newBuilder().setDefined(false).build())
+                .build();
 
-        process.abstractionInterfaceMap.put(process.ucTopic+".ep[0]", new EP(process, state, 0, process.leader));
-        process.abstractionInterfaceMap.put(process.ucTopic+".ep[0]"+".pl", new PL());
-        process.abstractionInterfaceMap.get(process.ucTopic+".ep[0]"+".pl").init(process);
+        this.process.abstractionInterfaceMap.put(this.process.ucTopic + ".ep[0]", new EP(this.process, state, 0, this.process.leader));
+        this.process.abstractionInterfaceMap.put(this.process.ucTopic + ".ep[0]" + ".pl", new PL());
+        this.process.abstractionInterfaceMap.get(this.process.ucTopic + ".ep[0]" + ".pl").init(this.process);
 
     }
 
     public void proposeValue() {
-        if(process.leader.equals(ProcUtil.getCurrentProcess(process)) && process.ucState.val.getDefined() && !process.ucState.proposed) {
-            process.ucState.proposed = true;
-            process.messages.add(Message.newBuilder().setType(Message.Type.EP_PROPOSE)
+        if(this.process.leader.equals(ProcUtil.getCurrentProcess(this.process)) && this.process.ucState.val.getDefined() && !this.process.ucState.proposed) {
+            this.process.ucState.proposed = true;
+            this.process.messages.add(Message.newBuilder().setType(Message.Type.EP_PROPOSE)
                     .setSystemId("sys-1")
-                    .setToAbstractionId(process.ucTopic+".ep["+ process.ucState.ets +"]")
-                    .setEpPropose(EpPropose.newBuilder().setValue(Value.newBuilder().setDefined(true).setV(process.ucState.val.getV()).build()).build())
+                    .setToAbstractionId(this.process.ucTopic + ".ep[" + this.process.ucState.ets + "]")
+                    .setEpPropose(EpPropose.newBuilder()
+                            .setValue(Value.newBuilder()
+                                    .setDefined(true)
+                                    .setV(this.process.ucState.val.getV())
+                                    .build())
+                            .build())
                     .build());
         }
     }
@@ -66,46 +74,49 @@ public class UC implements AbstractionInterface{
     public boolean handle(Message message) {
         switch (message.getType()) {
             case UC_PROPOSE:
-                process.ucState.val = Value.newBuilder().setDefined(true).setV(message.getUcPropose().getValue().getV()).build();
+                this.process.ucState.val = Value.newBuilder().setDefined(true).setV(message.getUcPropose().getValue().getV()).build();
                 proposeValue();
                 return true;
             case EC_START_EPOCH:
                 System.out.println("Start Epoch: UC\n");
 
-                process.ucState.newts = message.getEcStartEpoch().getNewTimestamp();
-                process.ucState.newl = message.getEcStartEpoch().getNewLeader();
-                process.messages.add(Message.newBuilder().setType(Message.Type.EP_ABORT)
+                this.process.ucState.newts = message.getEcStartEpoch().getNewTimestamp();
+                this.process.ucState.newl = message.getEcStartEpoch().getNewLeader();
+                this.process.messages.add(Message.newBuilder().setType(Message.Type.EP_ABORT)
                         .setSystemId("sys-1")
-                        .setToAbstractionId(process.ucTopic+".ep[" + process.ucState.ets+"]")
+                        .setToAbstractionId(this.process.ucTopic + ".ep[" + this.process.ucState.ets + "]")
                         .setEpAbort(EpAbort.newBuilder().build())
                         .build());
                 return true;
             case EP_ABORTED:
                 System.out.println("EP Aborted: UC\n");
-                if(message.getEpAborted().getEts() == process.ucState.ets) {
-                    process.ucState.ets = process.ucState.newts;
-                    process.leader = process.ucState.newl;
-                    process.ucState.proposed = false;
+                if (message.getEpAborted().getEts() == this.process.ucState.ets) {
+                    this.process.ucState.ets = process.ucState.newts;
+                    this.process.leader = process.ucState.newl;
+                    this.process.ucState.proposed = false;
 
                     EpInternalState state = EpInternalState.newBuilder().setValueTimestamp(message.getEpAborted().getValueTimestamp()).
                             setValue(Value.newBuilder().setDefined(true).setV(message.getEpAborted().getValue().getV()).build()).build();
-                    process.abstractionInterfaceMap.put(process.ucTopic+".ep["+ process.ucState.ets +"]", new EP(process, state, process.ucState.ets, process.leader));
-                    process.abstractionInterfaceMap.put(process.ucTopic+".ep["+ process.ucState.ets +"]", new PL());
-                    process.abstractionInterfaceMap.get(process.ucTopic+".ep["+ process.ucState.ets +"]").init(process);
+                    this.process.abstractionInterfaceMap.put(this.process.ucTopic + ".ep[" + this.process.ucState.ets + "]",
+                            new EP(this.process, state, this.process.ucState.ets, this.process.leader));
+
+                    this.process.abstractionInterfaceMap.put(this.process.ucTopic + ".ep[" + this.process.ucState.ets + "]", new PL());
+                    this.process.abstractionInterfaceMap.get(this.process.ucTopic + ".ep[" + this.process.ucState.ets + "]").init(this.process);
 
 //                    leader == self && ucState.proposed == false
-                    if(process.ucState.val!=null)
+                    if (this.process.ucState.val != null) {
                         proposeValue();
+                    }
                     return true;
                 }
             case EP_DECIDE:
                 System.out.println("EP Decide: UC");
-                if(message.getEpDecide().getEts() == process.ucState.ets){
+                if (message.getEpDecide().getEts() == this.process.ucState.ets) {
 
-                    if(!process.ucState.decided) {
-                        process.ucState.decided = true;
-                        process.messages.add(Message.newBuilder().setType(Message.Type.UC_DECIDE)
-                                .setToAbstractionId(process.ucTopic)
+                    if (!this.process.ucState.decided) {
+                        this.process.ucState.decided = true;
+                        this.process.messages.add(Message.newBuilder().setType(Message.Type.UC_DECIDE)
+                                .setToAbstractionId(this.process.ucTopic)
                                 .setSystemId("sys-1")
                                 .setUcDecide(UcDecide.newBuilder()
                                         .setValue(Value.newBuilder()
@@ -128,7 +139,7 @@ public class UC implements AbstractionInterface{
                                 .build())
                         .build();
 
-                sendToHub(msg, process.ucTopic, "app", process.port);
+                sendToHub(msg, this.process.ucTopic, "app", this.process.port);
                 return true;
         }
 

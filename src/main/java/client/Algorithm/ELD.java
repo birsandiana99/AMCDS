@@ -13,18 +13,18 @@ public class ELD implements AbstractionInterface {
     private Proc process;
 
     @Override
-    public void init(Proc p) {
-        process = p;
-        process.eldState = new ELDState();
-        process.eldState.timer.schedule(new TimerTask() {
+    public void init(Proc process) {
+        this.process = process;
+        this.process.eldState = new ELDState();
+        this.process.eldState.timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                process.messages.add(
+                ELD.this.process.messages.add(
                         Message.newBuilder()
                                 .setSystemId("sys-1")
                                 .setType(Message.Type.ELD_TIMEOUT)
-                                .setFromAbstractionId(process.ucTopic+".ec.eld")
-                                .setToAbstractionId(process.ucTopic+".ec.eld")
+                                .setFromAbstractionId(ELD.this.process.ucTopic + ".ec.eld")
+                                .setToAbstractionId(ELD.this.process.ucTopic + ".ec.eld")
                                 .setEldTimeout(EldTimeout.newBuilder()
                                         .build())
                                 .build()
@@ -35,8 +35,8 @@ public class ELD implements AbstractionInterface {
 
     public List<ProcessId> getUnsuspected(List<ProcessId> processes, List<ProcessId> suspected){
         List<ProcessId> list = new ArrayList<>();
-        for(ProcessId pid : processes) {
-            if(!suspected.contains(pid)) {
+        for (ProcessId pid : processes) {
+            if (!suspected.contains(pid)) {
                 list.add(pid);
             }
         }
@@ -47,28 +47,28 @@ public class ELD implements AbstractionInterface {
     public boolean handle(Message message) {
         switch (message.getType()) {
             case EPFD_SUSPECT:
-                process.eldState.suspected.add(message.getEpfdSuspect().getProcess());
+                this.process.eldState.suspected.add(message.getEpfdSuspect().getProcess());
                 return true;
             case EPFD_RESTORE:
-                process.eldState.suspected.remove(message.getEpfdRestore().getProcess());
+                this.process.eldState.suspected.remove(message.getEpfdRestore().getProcess());
                 return true;
             case ELD_TIMEOUT:
-                List<ProcessId> unsuspectedProcs = getUnsuspected(process.processes,process.eldState.suspected);
-                ProcessId unsuspLeader = null;
-                if(!unsuspectedProcs.isEmpty()){
-                    unsuspLeader = ProcUtil.maxRank(unsuspectedProcs);
+                List<ProcessId> unsuspectedProcesses = this.getUnsuspected(this.process.processes,process.eldState.suspected);
+                ProcessId unsuspectedLeader = null;
+                if (!unsuspectedProcesses.isEmpty()) {
+                    unsuspectedLeader = ProcUtil.maxRank(unsuspectedProcesses);
                 }
 
-                if(unsuspLeader != null && process.leader.getRank() != unsuspLeader.getRank()) {
+                if (unsuspectedLeader != null && this.process.leader.getRank() != unsuspectedLeader.getRank()) {
 
-                    process.leader = unsuspLeader;
-                    process.messages.add(Message.newBuilder()
+                    this.process.leader = unsuspectedLeader;
+                    this.process.messages.add(Message.newBuilder()
                             .setSystemId("sys-1")
                             .setType(Message.Type.ELD_TRUST)
-                            .setFromAbstractionId(process.ucTopic+".ec.eld")
-                            .setToAbstractionId(process.ucTopic+".ec")
+                            .setFromAbstractionId(this.process.ucTopic + ".ec.eld")
+                            .setToAbstractionId(this.process.ucTopic + ".ec")
                             .setEldTrust(EldTrust.newBuilder()
-                                    .setProcess(process.leader)
+                                    .setProcess(this.process.leader)
                                     .build())
                             .build());
                 }

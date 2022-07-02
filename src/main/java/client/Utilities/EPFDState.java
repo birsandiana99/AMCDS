@@ -13,8 +13,8 @@ public class EPFDState {
     public long delay;
     public Timer timer;
 
-    public EPFDState(Proc p){
-        alive = p.processes;
+    public EPFDState(Proc process) {
+        alive = process.processes;
         suspected = new ArrayList<>();
         delay = 100;
         timer = new Timer();

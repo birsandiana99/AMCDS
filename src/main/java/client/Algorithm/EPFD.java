@@ -6,7 +6,6 @@ import client.Utilities.EPFDState;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Timer;
 import java.util.TimerTask;
 
 public class EPFD implements AbstractionInterface{
@@ -14,30 +13,30 @@ public class EPFD implements AbstractionInterface{
     private Proc process;
 
     @Override
-    public void init(Proc p) {
-        process = p;
-        process.epfdState = new EPFDState(process);
-        process.epfdState.timer.schedule(new TimerTask() {
+    public void init(Proc process) {
+        this.process = process;
+        this.process.epfdState = new EPFDState(this.process);
+        this.process.epfdState.timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                process.messages.add(
+                EPFD.this.process.messages.add(
                         Message.newBuilder()
                                 .setType(Message.Type.EPFD_TIMEOUT)
                                 .setSystemId("sys-1")
-                                .setFromAbstractionId(process.ucTopic+".ec.eld.epfd")
-                                .setToAbstractionId(process.ucTopic+".ec.eld.epfd")
+                                .setFromAbstractionId(EPFD.this.process.ucTopic + ".ec.eld.epfd")
+                                .setToAbstractionId(EPFD.this.process.ucTopic + ".ec.eld.epfd")
                                 .setEpfdTimeout(EpfdTimeout.newBuilder()
                                         .build())
                                 .build()
                 );
             }
-        }, process.epfdState.delay);
+        }, this.process.epfdState.delay);
     }
 
-    public List<ProcessId> processIntersection(List<ProcessId> processes1, List<ProcessId> processes2){
+    public List<ProcessId> processIntersection(List<ProcessId> processesList1, List<ProcessId> processesList2){
         List<ProcessId> res = new ArrayList<>();
-        for(ProcessId pid : processes1){
-            if(processes2.contains(pid)) {
+        for(ProcessId pid : processesList1){
+            if(processesList2.contains(pid)) {
                 res.add(pid);
             }
         }
@@ -45,43 +44,43 @@ public class EPFD implements AbstractionInterface{
     }
 
     public void timeout() {
-        if(processIntersection(process.epfdState.alive, process.epfdState.suspected).size() != 0) {
-            process.epfdState.delay += 100;
+        if (processIntersection(this.process.epfdState.alive, this.process.epfdState.suspected).size() != 0) {
+            this.process.epfdState.delay += 100;
         }
-        for(ProcessId pid:process.processes) {
-            if(!process.epfdState.alive.contains(pid) && !process.epfdState.suspected.contains(pid)) {
-                process.epfdState.suspected.add(pid);
-                process.messages.add(Message.newBuilder()
+        for (ProcessId pid: this.process.processes) {
+            if (!this.process.epfdState.alive.contains(pid) && !this.process.epfdState.suspected.contains(pid)) {
+                this.process.epfdState.suspected.add(pid);
+                this.process.messages.add(Message.newBuilder()
                         .setType(Message.Type.EPFD_SUSPECT)
-                        .setFromAbstractionId(process.ucTopic+".ec.eld.epfd")
-                        .setToAbstractionId(process.ucTopic+".ec.eld")
+                        .setFromAbstractionId(this.process.ucTopic + ".ec.eld.epfd")
+                        .setToAbstractionId(this.process.ucTopic + ".ec.eld")
                         .setSystemId("sys-1")
                         .setEpfdSuspect(EpfdSuspect.newBuilder()
                                 .setProcess(pid)
                                 .build())
                         .build());
             }
-            else if(process.epfdState.alive.contains(pid) && process.epfdState.suspected.contains(pid)) {
-                process.epfdState.suspected.remove(pid);
-                process.messages.add(Message.newBuilder()
+            else if (this.process.epfdState.alive.contains(pid) && this.process.epfdState.suspected.contains(pid)) {
+                this.process.epfdState.suspected.remove(pid);
+                this.process.messages.add(Message.newBuilder()
                         .setType(Message.Type.EPFD_RESTORE)
-                        .setFromAbstractionId(process.ucTopic+".ec.eld.epfd")
-                        .setToAbstractionId(process.ucTopic+".ec.eld")
+                        .setFromAbstractionId(this.process.ucTopic + ".ec.eld.epfd")
+                        .setToAbstractionId(this.process.ucTopic + ".ec.eld")
                         .setSystemId("sys-1")
                         .setEpfdRestore(EpfdRestore.newBuilder().setProcess(pid).build())
                         .build());
             }
 
-            process.messages.add(Message.newBuilder()
+            this.process.messages.add(Message.newBuilder()
                     .setType(Message.Type.PL_SEND)
-                    .setFromAbstractionId(process.ucTopic+".ec.eld.epfd")
-                    .setToAbstractionId(process.ucTopic+".ec.eld.epfd.pl")
+                    .setFromAbstractionId(this.process.ucTopic + ".ec.eld.epfd")
+                    .setToAbstractionId(this.process.ucTopic + ".ec.eld.epfd.pl")
                     .setSystemId("sys-1")
                     .setPlSend(PlSend.newBuilder()
                             .setDestination(pid)
                             .setMessage(Message.newBuilder()
-                                    .setFromAbstractionId(process.ucTopic+".ec.eld.epfd")
-                                    .setToAbstractionId(process.ucTopic+".ec.eld.epfd")
+                                    .setFromAbstractionId(this.process.ucTopic + ".ec.eld.epfd")
+                                    .setToAbstractionId(this.process.ucTopic + ".ec.eld.epfd")
                                     .setSystemId("sys-1")
                                     .setType(Message.Type.EPFD_INTERNAL_HEARTBEAT_REQUEST)
                                     .setEpfdInternalHeartbeatRequest(EpfdInternalHeartbeatRequest.newBuilder()
@@ -91,22 +90,22 @@ public class EPFD implements AbstractionInterface{
                     .build());
         }
 
-        process.epfdState.alive = new ArrayList<>();
-        process.epfdState.timer.schedule(new TimerTask() {
+        this.process.epfdState.alive = new ArrayList<>();
+        this.process.epfdState.timer.schedule(new TimerTask() {
             @Override
             public void run() {
                 process.messages.add(
                         Message.newBuilder()
                                 .setSystemId("sys-1")
                                 .setType(Message.Type.EPFD_TIMEOUT)
-                                .setFromAbstractionId(process.ucTopic+".ec.eld.epfd")
-                                .setToAbstractionId(process.ucTopic+".ec.eld.epfd")
+                                .setFromAbstractionId(process.ucTopic + ".ec.eld.epfd")
+                                .setToAbstractionId(process.ucTopic + ".ec.eld.epfd")
                                 .setEpfdTimeout(EpfdTimeout.newBuilder()
                                         .build())
                                 .build()
                 );
             }
-        }, process.epfdState.delay);
+        }, this.process.epfdState.delay);
     }
 
     @Override
@@ -116,21 +115,19 @@ public class EPFD implements AbstractionInterface{
                 timeout();
                 return true;
             case PL_DELIVER:
-                Message m = message.getPlDeliver().getMessage();
-                if(m.getType().equals(Message.Type.EPFD_INTERNAL_HEARTBEAT_REQUEST))
-                {
-                    Message msg = Message.newBuilder()
+                Message heartbeat = message.getPlDeliver().getMessage();
+                if (heartbeat.getType().equals(Message.Type.EPFD_INTERNAL_HEARTBEAT_REQUEST)) {
+                    Message heartbeatReplySend = Message.newBuilder()
                             .setSystemId("sys-1")
-                            .setFromAbstractionId(process.ucTopic+".ec.eld.epfd")
-                            .setToAbstractionId(process.ucTopic+".ec.eld.epfd")
+                            .setFromAbstractionId(this.process.ucTopic + ".ec.eld.epfd")
+                            .setToAbstractionId(this.process.ucTopic + ".ec.eld.epfd")
                             .setType(Message.Type.EPFD_INTERNAL_HEARTBEAT_REPLY)
                             .build();
-                    plSend(msg, process.ucTopic+".ec.eld.epfd", process.ucTopic+".ec.eld.epfd.pl", message.getPlDeliver().getSender());
+                    plSend(heartbeatReplySend, this.process.ucTopic + ".ec.eld.epfd", this.process.ucTopic + ".ec.eld.epfd.pl", message.getPlDeliver().getSender());
                     return true;
                 }
-                else if(m.getType().equals(Message.Type.EPFD_INTERNAL_HEARTBEAT_REPLY))
-                {
-                    process.epfdState.alive.add(message.getPlDeliver().getSender());
+                else if (heartbeat.getType().equals(Message.Type.EPFD_INTERNAL_HEARTBEAT_REPLY)) {
+                    this.process.epfdState.alive.add(message.getPlDeliver().getSender());
                     return true;
                 }
                 return false;
@@ -138,11 +135,11 @@ public class EPFD implements AbstractionInterface{
         return false;
     }
 
-    public void plSend(Message m, String from, String to, ProcessId pid) {
-        process.messages.add(Message.newBuilder()
+    public void plSend(Message message, String from, String to, ProcessId pid) {
+        this.process.messages.add(Message.newBuilder()
                 .setType(Message.Type.PL_SEND)
                 .setPlSend(PlSend.newBuilder()
-                        .setMessage(m)
+                        .setMessage(message)
                         .setDestination(pid)
                         .build())
                 .setSystemId("sys-1")

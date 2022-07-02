@@ -15,119 +15,126 @@ public class Listener extends Thread {
     private Thread t;
     private String threadName;
     private ServerSocket processSocket;
-    private boolean running;
+    private boolean isRunning;
     private Proc process;
 
     public Listener(String threadName, int port, Proc p) throws IOException {
         this.threadName = threadName;
-        processSocket = new ServerSocket(port);
-        running = true;
-        process = p;
+        this.processSocket = new ServerSocket(port);
+        this.isRunning = true;
+        this.process = p;
     }
 
     public void run() {
         Socket socket = null;
         try {
-            EventsListener messageListener = new EventsListener(process);
+            EventsListener messageListener = new EventsListener(this.process);
 
             messageListener.start();
 
-            while(running) {
-                socket = processSocket.accept();
+            while (this.isRunning) {
+                socket = this.processSocket.accept();
                 Message message = MessageUtils.read(socket.getInputStream());
 
                 if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.PROC_INITIALIZE_SYSTEM)) {
-                    System.out.println(process.debugName + " received PROC INITIALIZE SYSTEM \n");
+                    System.out.println(this.process.debugName + " received PROC INITIALIZE SYSTEM \n");
 
-                    process.processes = message.getNetworkMessage().getMessage().getProcInitializeSystem().getProcessesList();
-                    process.rank = process.processes.get(process.index).getRank();
+                    this.process.processes = message.getNetworkMessage().getMessage().getProcInitializeSystem().getProcessesList();
+                    this.process.rank = this.process.processes.get(this.process.index).getRank();
 
                     List<ProcessId> processesList = message.getNetworkMessage().getMessage().getProcInitializeSystem().getProcessesList();
-                    process.setProcesses(processesList);
+                    this.process.setProcesses(processesList);
 
-                    process.abstractionInterfaceMap.put("app", new APP());
-                    process.abstractionInterfaceMap.get("app").init(process);
+                    this.process.abstractionInterfaceMap.put("app", new APP());
+                    this.process.abstractionInterfaceMap.get("app").init(this.process);
 
-                    process.abstractionInterfaceMap.put("app.pl", new PL());
-                    process.abstractionInterfaceMap.get("app.pl").init(process);
+                    this.process.abstractionInterfaceMap.put("app.pl", new PL());
+                    this.process.abstractionInterfaceMap.get("app.pl").init(this.process);
 
-                    process.abstractionInterfaceMap.put("app.beb", new BEB());
-                    process.abstractionInterfaceMap.get("app.beb").init(process);
+                    this.process.abstractionInterfaceMap.put("app.beb", new BEB());
+                    this.process.abstractionInterfaceMap.get("app.beb").init(this.process);
 
-                    process.abstractionInterfaceMap.put("app.beb.pl", new PL());
-                    process.abstractionInterfaceMap.get("app.beb.pl").init(process);
+                    this.process.abstractionInterfaceMap.put("app.beb.pl", new PL());
+                    this.process.abstractionInterfaceMap.get("app.beb.pl").init(this.process);
                 }
                 else if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.PROC_DESTROY_SYSTEM)) {
-                    System.out.println(process.debugName + " received PROC DESTROY SYSTEM \n");
-                    process.abstractionInterfaceMap.clear();
+                    System.out.println(this.process.debugName + " received PROC DESTROY SYSTEM \n");
+                    this.process.abstractionInterfaceMap.clear();
 
                 }
                 else if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.APP_BROADCAST)) {
-                    System.out.println(process.debugName + " received APP BROADCAST \n");
-                    process.messages.add(message);
+                    System.out.println(this.process.debugName + " received APP BROADCAST \n");
+                    this.process.messages.add(message);
                 }
                 else if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.APP_VALUE)) {
-                    process.messages.add(message);
+                    this.process.messages.add(message);
                 }
                 else if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.APP_WRITE)) {
-                    System.out.println(process.debugName + " received APP WRITE \n");
-                    process.messages.add(message);
+                    System.out.println(this.process.debugName + " received APP WRITE \n");
+                    this.process.messages.add(message);
                 }
                 else if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.NNAR_INTERNAL_READ)) {
-                    System.out.println(process.debugName + " received NNAR INTERNAL READ \n");
+                    System.out.println(this.process.debugName + " received NNAR INTERNAL READ \n");
                     String toAbstractionId = message.getNetworkMessage().getMessage().getToAbstractionId();
                     String register = String.valueOf(toAbstractionId.charAt(9));
                     registerAbstraction(register);
-                    process.messages.add(message);
+                    this.process.messages.add(message);
                 }
                 else if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.NNAR_INTERNAL_VALUE)) {
-                    System.out.println(process.debugName + " received NNAR INTERNAL VALUE \n");
-                    process.messages.add(message);
+                    System.out.println(this.process.debugName + " received NNAR INTERNAL VALUE \n");
+                    this.process.messages.add(message);
                 }
                 else if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.NNAR_INTERNAL_WRITE)) {
-                    System.out.println(process.debugName + " received NNAR INTERNAL WRITE \n");
-                    process.messages.add(message);
+                    System.out.println(this.process.debugName + " received NNAR INTERNAL WRITE \n");
+                    this.process.messages.add(message);
                 }
                 else if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.NNAR_INTERNAL_ACK)) {
-                    System.out.println(process.debugName + " received NNAR INTERNAL ACK \n");
-                    process.messages.add(message);
+                    System.out.println(this.process.debugName + " received NNAR INTERNAL ACK \n");
+                    this.process.messages.add(message);
                 }
                 else if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.APP_READ)) {
-                    System.out.println(process.debugName + " received APP READ \n");
-                    process.messages.add(message);
+                    System.out.println(this.process.debugName + " received APP READ \n");
+                    this.process.messages.add(message);
                 }
 
                 else if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.APP_PROPOSE)) {
 
-                    process.value = message.getNetworkMessage().getMessage().getAppPropose().getValue().getV();
+                    this.process.value = message.getNetworkMessage().getMessage().getAppPropose().getValue().getV();
                     String topic = message.getNetworkMessage().getMessage().getAppPropose().getTopic();
-                    process.ucTopic = "app.uc["+topic+"]";
+                    this.process.ucTopic = "app.uc[" + topic + "]";
 
-                    process.abstractionInterfaceMap.put(process.ucTopic, new UC());
-                    process.abstractionInterfaceMap.get(process.ucTopic).init(process);
-                    process.abstractionInterfaceMap.put(process.ucTopic+".ec", new EC());
-                    process.abstractionInterfaceMap.get(process.ucTopic+".ec").init(process);
-                    process.abstractionInterfaceMap.put(process.ucTopic+".ec"+".eld", new ELD());
-                    process.abstractionInterfaceMap.get(process.ucTopic+".ec"+".eld").init(process);
-                    process.abstractionInterfaceMap.put(process.ucTopic+".ec"+".eld"+".epfd", new EPFD());
-                    process.abstractionInterfaceMap.get(process.ucTopic+".ec"+".eld"+".epfd").init(process);
-                    process.abstractionInterfaceMap.put(process.ucTopic+".ec"+".eld"+".epfd"+".pl", new PL());
-                    process.abstractionInterfaceMap.get(process.ucTopic+".ec"+".eld"+".epfd"+".pl").init(process);
-                    process.abstractionInterfaceMap.put(process.ucTopic+".ec"+".pl", new PL());
-                    process.abstractionInterfaceMap.get(process.ucTopic+".ec"+".pl").init(process);
-                    process.abstractionInterfaceMap.put(process.ucTopic+".ec"+".beb", new BEB());
-                    process.abstractionInterfaceMap.get(process.ucTopic+".ec"+".beb").init(process);
-                    process.abstractionInterfaceMap.put(process.ucTopic+".ec"+".beb"+".pl", new PL());
-                    process.abstractionInterfaceMap.get(process.ucTopic+".ec"+".beb"+".pl").init(process);
+                    this.process.abstractionInterfaceMap.put(this.process.ucTopic, new UC());
+                    this.process.abstractionInterfaceMap.get(this.process.ucTopic).init(this.process);
 
-                    process.messages.add(Message.newBuilder()
-                            .setToAbstractionId(process.ucTopic)
+                    this.process.abstractionInterfaceMap.put(this.process.ucTopic + ".ec", new EC());
+                    this.process.abstractionInterfaceMap.get(this.process.ucTopic + ".ec").init(this.process);
+
+                    this.process.abstractionInterfaceMap.put(this.process.ucTopic + ".ec.eld", new ELD());
+                    this.process.abstractionInterfaceMap.get(this.process.ucTopic + ".ec.eld").init(this.process);
+
+                    this.process.abstractionInterfaceMap.put(this.process.ucTopic + ".ec.eld.epfd", new EPFD());
+                    this.process.abstractionInterfaceMap.get(this.process.ucTopic + ".ec.eld.epfd").init(this.process);
+
+                    this.process.abstractionInterfaceMap.put(this.process.ucTopic + ".ec.eld.epfd.pl", new PL());
+                    this.process.abstractionInterfaceMap.get(this.process.ucTopic + ".ec.eld.epfd.pl").init(this.process);
+
+                    this.process.abstractionInterfaceMap.put(this.process.ucTopic + ".ec.pl", new PL());
+                    this.process.abstractionInterfaceMap.get(this.process.ucTopic + ".ec.pl").init(this.process);
+
+                    this.process.abstractionInterfaceMap.put(this.process.ucTopic + ".ec.beb", new BEB());
+                    this.process.abstractionInterfaceMap.get(this.process.ucTopic + ".ec.beb").init(this.process);
+
+                    this.process.abstractionInterfaceMap.put(this.process.ucTopic + ".ec.beb.pl", new PL());
+                    this.process.abstractionInterfaceMap.get(this.process.ucTopic + ".ec.beb.pl").init(this.process);
+
+                    this.process.messages.add(Message.newBuilder()
+                            .setToAbstractionId(this.process.ucTopic)
                             .setSystemId("sys-1")
                             .setType(Message.Type.UC_PROPOSE)
                             .setUcPropose(UcPropose.newBuilder()
                                     .setValue(Value.newBuilder()
                                             .setDefined(true)
-                                            .setV(process.sharedMemory.value)
+                                            .setV(this.process.sharedMemory.value)
                                             .build())
                                     .build())
                             .build());
@@ -135,10 +142,9 @@ public class Listener extends Thread {
 
                 else if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.EC_INTERNAL_NEW_EPOCH)) {
 
-                    if(process.abstractionInterfaceMap.get(message.getToAbstractionId()) == null){
-                        if(message.getToAbstractionId().contains("ec")){
-                            EpInternalState state = message.getNetworkMessage().getMessage().getEpInternalState();
-                            process.abstractionInterfaceMap.put(message.getToAbstractionId(), new EC());
+                    if (this.process.abstractionInterfaceMap.get(message.getToAbstractionId()) == null) {
+                        if (message.getToAbstractionId().contains("ec")) {
+                            this.process.abstractionInterfaceMap.put(message.getToAbstractionId(), new EC());
                         }
                     }
                     System.out.println("NETWORK: New epoch\n");
@@ -146,18 +152,18 @@ public class Listener extends Thread {
                             .setType(Message.Type.BEB_DELIVER)
                             .setToAbstractionId(message.getNetworkMessage().getMessage().getToAbstractionId())
                             .setBebDeliver(BebDeliver.newBuilder()
-                                    .setSender(process.getProcByPort(message.getNetworkMessage().getSenderListeningPort()))
+                                    .setSender(this.process.getProcByPort(message.getNetworkMessage().getSenderListeningPort()))
                                     .setMessage(message.getNetworkMessage().getMessage())
                                     .build())
                             .build();
-                    process.messages.add(msgBeb);
+                    this.process.messages.add(msgBeb);
                 }
                 else if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.EP_INTERNAL_READ)) {
-                    if(process.abstractionInterfaceMap.get(message.getToAbstractionId()) == null){
-                        if(message.getToAbstractionId().contains("ep")){
+                    if (this.process.abstractionInterfaceMap.get(message.getToAbstractionId()) == null) {
+                        if (message.getToAbstractionId().contains("ep")) {
                             EpInternalState state = message.getNetworkMessage().getMessage().getEpInternalState();
-//                            process.abstractionInterfaceMap.put(message.getNetworkMessage().getMessage().getToAbstractionId(), new EP(process, state, process.epState.ets, process.epState.leader));
-                            process.abstractionInterfaceMap.put(message.getNetworkMessage().getMessage().getToAbstractionId(), new EP(process, state, process.epState.ets, process.leader));
+                            this.process.abstractionInterfaceMap.put(message.getNetworkMessage().getMessage().getToAbstractionId(),
+                                    new EP(this.process, state, this.process.epState.ets, this.process.leader));
                         }
                     }
                     System.out.println("NETWORK: internal read\n");
@@ -165,19 +171,19 @@ public class Listener extends Thread {
                             .setType(Message.Type.BEB_DELIVER)
                             .setToAbstractionId(message.getNetworkMessage().getMessage().getToAbstractionId())
                             .setBebDeliver(BebDeliver.newBuilder()
-                                    .setSender(process.getProcByPort(message.getNetworkMessage().getSenderListeningPort()))
+                                    .setSender(this.process.getProcByPort(message.getNetworkMessage().getSenderListeningPort()))
                                     .setMessage(message.getNetworkMessage().getMessage())
                                     .build())
                             .build();
-                    process.messages.add(msgBeb);
+                    this.process.messages.add(msgBeb);
                 }
 
                 else if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.EP_INTERNAL_WRITE)) {
-                    if(process.abstractionInterfaceMap.get(message.getToAbstractionId()) == null){
-                        if(message.getToAbstractionId().contains("ep")){
+                    if (this.process.abstractionInterfaceMap.get(message.getToAbstractionId()) == null) {
+                        if (message.getToAbstractionId().contains("ep")) {
                             EpInternalState state = message.getNetworkMessage().getMessage().getEpInternalState();
-//                            process.abstractionInterfaceMap.put(message.getNetworkMessage().getMessage().getToAbstractionId(), new EP(process, state, process.epState.ets, process.epState.leader));
-                            process.abstractionInterfaceMap.put(message.getNetworkMessage().getMessage().getToAbstractionId(), new EP(process, state, process.epState.ets, process.leader));
+                            this.process.abstractionInterfaceMap.put(message.getNetworkMessage().getMessage().getToAbstractionId(),
+                                    new EP(this.process, state, this.process.epState.ets, this.process.leader));
                         }
                     }
                     System.out.println("NETWORK: internal write\n");
@@ -185,19 +191,19 @@ public class Listener extends Thread {
                             .setType(Message.Type.BEB_DELIVER)
                             .setToAbstractionId(message.getNetworkMessage().getMessage().getToAbstractionId())
                             .setBebDeliver(BebDeliver.newBuilder()
-                                    .setSender(process.getProcByPort(message.getNetworkMessage().getSenderListeningPort()))
+                                    .setSender(this.process.getProcByPort(message.getNetworkMessage().getSenderListeningPort()))
                                     .setMessage(message.getNetworkMessage().getMessage())
                                     .build())
                             .build();
-                    process.messages.add(msgBeb);
+                    this.process.messages.add(msgBeb);
                 }
 
                 else if (message.getNetworkMessage().getMessage().getType().equals(Message.Type.EP_INTERNAL_DECIDED)) {
-                    if(process.abstractionInterfaceMap.get(message.getToAbstractionId()) == null){
-                        if(message.getToAbstractionId().contains("ep")){
+                    if (this.process.abstractionInterfaceMap.get(message.getToAbstractionId()) == null) {
+                        if (message.getToAbstractionId().contains("ep")) {
                             EpInternalState state = message.getNetworkMessage().getMessage().getEpInternalState();
-//                            process.abstractionInterfaceMap.put(message.getNetworkMessage().getMessage().getToAbstractionId(), new EP(process, state, process.epState.ets, process.epState.leader));
-                            process.abstractionInterfaceMap.put(message.getNetworkMessage().getMessage().getToAbstractionId(), new EP(process, state, process.epState.ets, process.leader));
+                            this.process.abstractionInterfaceMap.put(message.getNetworkMessage().getMessage().getToAbstractionId(),
+                                    new EP(this.process, state, this.process.epState.ets, this.process.leader));
                         }
                     }
                     System.out.println("NETWORK: internal decided\n");
@@ -205,34 +211,34 @@ public class Listener extends Thread {
                             .setType(Message.Type.BEB_DELIVER)
                             .setToAbstractionId(message.getNetworkMessage().getMessage().getToAbstractionId())
                             .setBebDeliver(BebDeliver.newBuilder()
-                                    .setSender(process.getProcByPort(message.getNetworkMessage().getSenderListeningPort()))
+                                    .setSender(this.process.getProcByPort(message.getNetworkMessage().getSenderListeningPort()))
                                     .setMessage(message.getNetworkMessage().getMessage())
                                     .build())
                             .build();
-                    process.messages.add(msgBeb);
+                    this.process.messages.add(msgBeb);
                 }
                 else {
-                    if(process.abstractionInterfaceMap.get(message.getToAbstractionId()) == null){
-                        if(message.getToAbstractionId().contains("ep")){
+                    if (this.process.abstractionInterfaceMap.get(message.getToAbstractionId()) == null) {
+                        if (message.getToAbstractionId().contains("ep")) {
                             EpInternalState state = message.getNetworkMessage().getMessage().getEpInternalState();
-//                            process.abstractionInterfaceMap.put(message.getToAbstractionId(), new EP(process, state, process.epState.ets, process.epState.leader));
-                            process.abstractionInterfaceMap.put(message.getToAbstractionId(), new EP(process, state, process.epState.ets, process.leader));
+                            this.process.abstractionInterfaceMap.put(message.getToAbstractionId(),
+                                    new EP(this.process, state, this.process.epState.ets, this.process.leader));
                         }
                     }
 
-                    process.messages.add(
+                    this.process.messages.add(
                             Message.newBuilder().setType(Message.Type.PL_DELIVER)
                                     .setToAbstractionId(message.getToAbstractionId())
                                     .setPlDeliver(PlDeliver.newBuilder()
-                                            .setSender(ProcUtil.getProcessByAddress(process.processes, message.getNetworkMessage().getSenderHost(), message.getNetworkMessage().getSenderListeningPort()))
+                                            .setSender(ProcUtil.getProcessByAddress(this.process.processes,
+                                                    message.getNetworkMessage().getSenderHost(),
+                                                    message.getNetworkMessage().getSenderListeningPort()))
                                             .setMessage(message.getNetworkMessage().getMessage())
                                             .build())
                                     .build()
                     );
                 }
-
                 socket.close();
-
             }
         } catch (IOException e) {
             System.out.println(e.getMessage());
@@ -241,30 +247,30 @@ public class Listener extends Thread {
     }
 
     public void start() {
-        if (t == null) {
-            t = new Thread(this, threadName);
-            t.start();
+        if (this.t == null) {
+            this.t = new Thread(this, this.threadName);
+            this.t.start();
      }
    }
 
     private void registerAbstraction(String register) {
-        if (process.abstractionInterfaceMap.get("app.nnar[" + register + "]") == null) {
-            process.abstractionInterfaceMap.put("app.nnar[" + register + "]", new NNAR());
-            process.abstractionInterfaceMap.get("app.nnar[" + register + "]").init(process);
+        if (this.process.abstractionInterfaceMap.get("app.nnar[" + register + "]") == null) {
+            this.process.abstractionInterfaceMap.put("app.nnar[" + register + "]", new NNAR());
+            this.process.abstractionInterfaceMap.get("app.nnar[" + register + "]").init(this.process);
 
-            process.abstractionInterfaceMap.put("app.nnar[" + register + "].pl", new PL());
-            process.abstractionInterfaceMap.get("app.nnar[" + register + "].pl").init(process);
+            this.process.abstractionInterfaceMap.put("app.nnar[" + register + "].pl", new PL());
+            this.process.abstractionInterfaceMap.get("app.nnar[" + register + "].pl").init(this.process);
 
-            process.abstractionInterfaceMap.put("app.nnar[" + register + "].beb", new BEB());
-            process.abstractionInterfaceMap.get("app.nnar[" + register + "].beb").init(process);
+            this.process.abstractionInterfaceMap.put("app.nnar[" + register + "].beb", new BEB());
+            this.process.abstractionInterfaceMap.get("app.nnar[" + register + "].beb").init(this.process);
 
-            process.abstractionInterfaceMap.put("app.nnar[" + register + "].beb.pl", new PL());
-            process.abstractionInterfaceMap.get("app.nnar[" + register + "].beb.pl").init(process);
+            this.process.abstractionInterfaceMap.put("app.nnar[" + register + "].beb.pl", new PL());
+            this.process.abstractionInterfaceMap.get("app.nnar[" + register + "].beb.pl").init(this.process);
 
-            process.sharedMemory.register = register;
-            process.sharedMemory.appNnar = "app.nnar[" + register + "]";
+            this.process.sharedMemory.register = register;
+            this.process.sharedMemory.appNnar = "app.nnar[" + register + "]";
 
-            System.out.println("Registered NNAR on " + process.debugName);
+            System.out.println("Registered NNAR on " + this.process.debugName);
         }
     }
 }

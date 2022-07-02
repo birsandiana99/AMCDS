@@ -11,7 +11,7 @@ public class UCState {
     public int newts;
     public ProcessId newl;
 
-    public UCState(){
+    public UCState() {
         val = Value.newBuilder().setDefined(false).build();
         proposed = false;
         decided = false;

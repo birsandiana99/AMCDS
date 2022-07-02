@@ -8,9 +8,9 @@ public class ECState {
     public int lastTimestamp;
     public int timestamp;
 
-    public ECState(Proc p){
-        trusted = p.leader;
+    public ECState(Proc process) {
+        trusted = process.leader;
         lastTimestamp = 0;
-        timestamp = ProcUtil.getCurrentProcess(p).getRank();
+        timestamp = ProcUtil.getCurrentProcess(process).getRank();
     }
 }

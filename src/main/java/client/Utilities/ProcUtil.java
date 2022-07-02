@@ -7,7 +7,7 @@ import java.util.List;
 
 public class ProcUtil {
     public static ProcessId maxRank(List<ProcessId> processes) {
-        if(!processes.isEmpty()){
+        if (!processes.isEmpty()) {
             int maxRank = 0;
             ProcessId leader = processes.get(0);
             for (ProcessId pid : processes) {
@@ -26,10 +26,10 @@ public class ProcUtil {
         ProcessId process = null;
 
         for (ProcessId pid : processes) {
-            String p_host = pid.getHost();
-            int p_port = pid.getPort();
+            String processHost = pid.getHost();
+            int processPort = pid.getPort();
 
-            if (p_host.equals(host) && p_port == port) {
+            if (processHost.equals(host) && processPort == port) {
                 process = pid;
             }
         }
@@ -37,13 +37,13 @@ public class ProcUtil {
     }
 
     public static ProcessId getCurrentProcess(Proc process) {
-        ProcessId p = null;
+        ProcessId proc = null;
         for (ProcessId pid : process.processes) {
             if (pid.getPort() == process.port) {
-                p = pid;
+                proc = pid;
             }
         }
-        return p;
+        return proc;
     }
 
 }

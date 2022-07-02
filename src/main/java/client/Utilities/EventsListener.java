@@ -8,17 +8,17 @@ import java.util.List;
 
 
 public class EventsListener extends Thread {
-    private Thread t;
+    private Thread thread;
     private Proc process;
 
-    public EventsListener(Proc p) {
-        process = p;
+    public EventsListener(Proc process) {
+        this.process = process;
     }
 
     public void start() {
-        if(t==null) {
-            t = new Thread(this);
-            t.start();
+        if (this.thread ==null) {
+            this.thread = new Thread(this);
+            this.thread.start();
         }
     }
 
@@ -26,23 +26,23 @@ public class EventsListener extends Thread {
         try {
             while (true) {
                 Thread.sleep(10);
-                if (process.messages.size() > 0) {
-                    List<Message> copyEventQueue = new ArrayList<>(process.messages);
+                if (this.process.messages.size() > 0) {
+                    List<Message> copyEventQueue = new ArrayList<>(this.process.messages);
                     for (Message message: copyEventQueue){
                         try {
-                            boolean isHandled = process.abstractionInterfaceMap.get(message.getToAbstractionId()).handle(message);
+                            boolean isHandled = this.process.abstractionInterfaceMap.get(message.getToAbstractionId()).handle(message);
                             if (isHandled) {
-                                process.messages.remove(message);
+                                this.process.messages.remove(message);
                             }
                         } catch (NullPointerException e){
                             System.out.println("EXCEPTION ON: \n"+message);
-                            System.out.println(process.abstractionInterfaceMap);
-                            process.messages.remove(message);
+                            System.out.println(this.process.abstractionInterfaceMap);
+                            this.process.messages.remove(message);
                         }
                     }
                 }
             }
-        } catch(Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

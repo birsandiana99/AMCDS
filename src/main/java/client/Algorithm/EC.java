@@ -10,9 +10,9 @@ public class EC implements AbstractionInterface{
     private Proc process;
 
     @Override
-    public void init(Proc p) {
-        process = p;
-        process.ecState = new ECState(process);
+    public void init(Proc process) {
+        this.process = process;
+        this.process.ecState = new ECState(this.process);
     }
 
     @Override
@@ -20,91 +20,90 @@ public class EC implements AbstractionInterface{
         switch (message.getType()) {
             case ELD_TRUST:
 
-                process.ecState.trusted = message.getEldTrust().getProcess();
-                if(message.getEldTrust().getProcess().equals(ProcUtil.getCurrentProcess(process))) {
-                    process.ecState.timestamp = process.ecState.timestamp + process.processes.size();
-                    Message msg = Message.newBuilder()
+                this.process.ecState.trusted = message.getEldTrust().getProcess();
+                if (message.getEldTrust().getProcess().equals(ProcUtil.getCurrentProcess(this.process))) {
+                    this.process.ecState.timestamp = this.process.ecState.timestamp + this.process.processes.size();
+                    Message ecInternalNewEpoch = Message.newBuilder()
                             .setType(Message.Type.EC_INTERNAL_NEW_EPOCH)
                             .setSystemId("sys-1")
-                            .setFromAbstractionId(process.ucTopic+".ec")
-                            .setToAbstractionId(process.ucTopic+".ec")
-                            .setEcInternalNewEpoch(EcInternalNewEpoch.newBuilder().setTimestamp(process.ecState.timestamp).build())
+                            .setFromAbstractionId(this.process.ucTopic+".ec")
+                            .setToAbstractionId(this.process.ucTopic+".ec")
+                            .setEcInternalNewEpoch(EcInternalNewEpoch.newBuilder().setTimestamp(this.process.ecState.timestamp).build())
                             .build();
-                    bebBroadcast(msg, process.ucTopic+".ec", process.ucTopic+".ec.beb");
+                    this.bebBroadcastParams(ecInternalNewEpoch, this.process.ucTopic + ".ec", this.process.ucTopic + ".ec.beb");
                 }
                 return true;
             case BEB_DELIVER:
-                if(message.getBebDeliver().getMessage().getType().equals(Message.Type.EC_INTERNAL_NEW_EPOCH)) {
+                if (message.getBebDeliver().getMessage().getType().equals(Message.Type.EC_INTERNAL_NEW_EPOCH)) {
                     System.out.println("new epoch - EC");
-                    newEpoch(message.getBebDeliver().getSender(), message.getBebDeliver().getMessage().getEcInternalNewEpoch().getTimestamp());
+                    this.newEpoch(message.getBebDeliver().getSender(), message.getBebDeliver().getMessage().getEcInternalNewEpoch().getTimestamp());
                     return true;
                 }
                 return false;
             case PL_DELIVER:
-                if(message.getPlDeliver().getMessage().getType().equals(Message.Type.EC_INTERNAL_NACK)) {
-                    if(process.ecState.trusted.equals(ProcUtil.getCurrentProcess(process))) {
-                        process.ecState.timestamp = process.ecState.timestamp + process.processes.size();
-                        Message msg = Message.newBuilder()
+                if (message.getPlDeliver().getMessage().getType().equals(Message.Type.EC_INTERNAL_NACK)) {
+                    if (this.process.ecState.trusted.equals(ProcUtil.getCurrentProcess(this.process))) {
+                        this.process.ecState.timestamp = this.process.ecState.timestamp + this.process.processes.size();
+                        Message ecInternalNewEpoch = Message.newBuilder()
                                 .setType(Message.Type.EC_INTERNAL_NEW_EPOCH)
-                                .setFromAbstractionId(process.ucTopic+".ec")
-                                .setToAbstractionId(process.ucTopic+".ec")
+                                .setFromAbstractionId(this.process.ucTopic+".ec")
+                                .setToAbstractionId(this.process.ucTopic+".ec")
                                 .setSystemId("sys-1")
                                 .setEcInternalNewEpoch(EcInternalNewEpoch.newBuilder()
-                                        .setTimestamp(process.ecState.timestamp)
+                                        .setTimestamp(this.process.ecState.timestamp)
                                         .build())
                                 .build();
-                        bebBroadcast(msg, process.ucTopic+".ec", process.ucTopic+".ec.beb");
+                        this.bebBroadcastParams(ecInternalNewEpoch, this.process.ucTopic + ".ec", this.process.ucTopic + ".ec.beb");
                     }
                     return true;
                 }
                 return false;
         }
-
         return false;
     }
 
-    private void newEpoch(ProcessId l, int newts) {
-        if(l.equals(process.ecState.trusted) && newts > process.ecState.lastTimestamp) {
+    private void newEpoch(ProcessId leader, int newTimestamp) {
+        if (leader.equals(this.process.ecState.trusted) && newTimestamp > this.process.ecState.lastTimestamp) {
 
-            process.ecState.lastTimestamp = newts;
-            process.messages.add(Message.newBuilder()
+            this.process.ecState.lastTimestamp = newTimestamp;
+            this.process.messages.add(Message.newBuilder()
                     .setType(Message.Type.EC_START_EPOCH)
                     .setSystemId("sys-1")
-                    .setToAbstractionId(process.ucTopic)
+                    .setToAbstractionId(this.process.ucTopic)
                     .setEcStartEpoch(EcStartEpoch.newBuilder()
-                            .setNewTimestamp(newts)
-                            .setNewLeader(l)
+                            .setNewTimestamp(newTimestamp)
+                            .setNewLeader(leader)
                             .build())
                     .build());
         }else {
-            Message msg = Message.newBuilder()
-                    .setFromAbstractionId(process.ucTopic+".ec")
-                    .setToAbstractionId(process.ucTopic+".ec")
+            Message ecInternalNack = Message.newBuilder()
+                    .setFromAbstractionId(this.process.ucTopic+".ec")
+                    .setToAbstractionId(this.process.ucTopic+".ec")
                     .setType(Message.Type.EC_INTERNAL_NACK)
                     .setEcInternalNack(EcInternalNack.newBuilder()
                             .build())
                     .build();
-            plSend(msg, process.ucTopic+".ec", process.ucTopic+".ec.pl", l);
+            this.plSendParams(ecInternalNack, this.process.ucTopic + ".ec", this.process.ucTopic + ".ec.pl", leader);
         }
     }
 
-    private void bebBroadcast(Message m, String from, String to) {
-        Message msg = Message.newBuilder()
+    private void bebBroadcastParams(Message message, String from, String to) {
+        Message bebBroadcast = Message.newBuilder()
                 .setType(Message.Type.BEB_BROADCAST)
                 .setBebBroadcast(BebBroadcast.newBuilder()
-                        .setMessage(m)
+                        .setMessage(message)
                         .build())
                 .setFromAbstractionId(from)
                 .setToAbstractionId(to)
                 .build();
-        process.messages.add(msg);
+        this.process.messages.add(bebBroadcast);
     }
 
-    public void plSend(Message m, String from, String to, ProcessId pid) {
-        process.messages.add(Message.newBuilder()
+    public void plSendParams(Message message, String from, String to, ProcessId pid) {
+        this.process.messages.add(Message.newBuilder()
                 .setType(Message.Type.PL_SEND)
                 .setPlSend(PlSend.newBuilder()
-                        .setMessage(m)
+                        .setMessage(message)
                         .setDestination(pid)
                         .build())
                 .setSystemId("sys-1")

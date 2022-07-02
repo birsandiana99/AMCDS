@@ -9,17 +9,15 @@ public class EPState {
     public Value tmpval;
     public HashMap<Integer, EpInternalState> states;
     public int accepted;
-//    public ProcessId leader;
     public int ets;
     public boolean halted;
 
-    public EPState(EpInternalState state, int ets, ProcessId l){
-        st = state;
+    public EPState(EpInternalState state, int ets, ProcessId l) {
+        this.st = state;
         this.ets = ets;
-//        leader = l;
-        tmpval = Value.newBuilder().setDefined(false).build();
-        states = new HashMap<>();
-        accepted = 0;
-        halted = false;
+        this.tmpval = Value.newBuilder().setDefined(false).build();
+        this.states = new HashMap<>();
+        this.accepted = 0;
+        this.halted = false;
     }
 }

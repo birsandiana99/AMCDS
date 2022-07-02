@@ -66,15 +66,15 @@ public class Proc {
         return null;
     }
 
-    public void setProcesses(List<ProcessId> procs) {
-        processes = procs;
-        pid = getProcByPort(port);
+    public void setProcesses(List<ProcessId> processes) {
+        this.processes = processes;
+        this.pid = getProcByPort(this.port);
     }
 
     public ProcessId getLeader() {
         int maxRank = 0;
-        ProcessId leader = processes.get(0);
-        for (ProcessId pid: processes) {
+        ProcessId leader = this.processes.get(0);
+        for (ProcessId pid: this.processes) {
             if (pid.getRank() > maxRank) {
                 maxRank = pid.getRank();
                 leader = pid;
